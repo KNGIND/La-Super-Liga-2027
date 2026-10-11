@@ -316,11 +316,24 @@
     if (cfg.tap === 'cycle' && open) { showSlide(idx + 1); armClose(); return; }
     setOpen(!open);
   }
+  // Convierte los enlaces de "compartir" de Drive, Dropbox y similares en enlaces directos al archivo
+  function audioURL(u) {
+    u = String(u || '').trim(); if (!u) return '';
+    var m = /drive\.google\.com\/file\/d\/([\w-]+)/.exec(u) || /drive\.google\.com\/open\?id=([\w-]+)/.exec(u);
+    if (m) return 'https://drive.google.com/uc?export=download&id=' + m[1];
+    if (/dropbox\.com\//.test(u)) return u.replace(/([?&])dl=0/, '$1raw=1').replace(/([?&])dl=1/, '$1raw=1').replace(/([?&])raw=0/, '$1raw=1').replace(/^https:\/\/www\.dropbox\.com/, 'https://dl.dropboxusercontent.com');
+    return u;
+  }
+  function audioFail() {
+    playing = false; sync();
+    if (L().ui && L().ui.toast) L().ui.toast('No se pudo reproducir. El link tiene que llevar directo a un archivo de audio (.mp3).', 4500);
+  }
   function togglePlay() {
     var sl = slides()[idx], s = sl && sl.s; if (!s || s.t !== 'music' || !s.audio) return;
-    if (!audio) { audio = new Audio(); audio.addEventListener('ended', function () { playing = false; sync(); }); audio.addEventListener('pause', function () { playing = false; sync(); }); audio.addEventListener('play', function () { playing = true; sync(); }); }
-    if (audio.getAttribute('data-src') !== s.audio) { audio.src = s.audio; audio.setAttribute('data-src', s.audio); }
-    if (audio.paused) { var pr = audio.play(); if (pr && pr.catch) pr.catch(function () { playing = false; sync(); }); } else audio.pause();
+    if (!audio) { audio = new Audio(); audio.preload = 'auto'; audio.addEventListener('error', function () { if (audio.getAttribute('data-src')) audioFail(); }); audio.addEventListener('ended', function () { playing = false; sync(); }); audio.addEventListener('pause', function () { playing = false; sync(); }); audio.addEventListener('play', function () { playing = true; sync(); }); }
+    var src = audioURL(s.audio); if (!src) return;
+    if (audio.getAttribute('data-src') !== src) { audio.src = src; audio.setAttribute('data-src', src); }
+    if (audio.paused) { var pr = audio.play(); if (pr && pr.catch) pr.catch(function () { audioFail(); }); } else audio.pause();
   }
   function sync() { el.setAttribute('data-dot', dotKind()); var b = el.querySelector('[data-isl-play]'); if (b) b.textContent = playing ? '❚❚' : '▶'; }
   function bind() {
@@ -425,7 +438,49 @@
       '<p class="isp-hint">Con la isla abierta, deslizá el dedo hacia los costados para cambiar de contenido.</p>';
     return h;
   }
-  var TABS = [['design', 'Diseño', tabDesign], ['shape', 'Tamaño', tabShape], ['place', 'Lugar', tabPlace], ['content', 'Contenido', tabContent], ['motion', 'Movimiento', tabMotion]];
+  var TABS = [['design', 'Diseño', tabDesign], ['shape', 'Tamaño', tabShape], ['place', 'Lugar', tabPlace], ['content', 'Contenido', tabContent], ['motion', 'Movimiento', tabMotion], ['avisos', 'Avisos', tabAvisos]];
+
+  function tabAvisos() {
+    var s = st(), ms = ((s && s.matches) || []).filter(function (m) { return m.status !== 'finished'; });
+    var h = '<h4>Aviso de gol</h4>';
+    if (!ms.length) return h + '<p class="isp-hint">No hay partidos pendientes ni en vivo.</p>';
+    h += '<label class="isf"><span>Partido</span><select data-avm>' + ms.map(function (m) {
+      return '<option value="' + esc(m.id) + '">' + esc(tn(m.home)) + ' vs ' + esc(tn(m.away)) + (m.status === 'live' ? ' (en vivo)' : '') + '</option>';
+    }).join('') + '</select></label>';
+    h += '<label class="isf"><span>Gol de</span><select data-avs><option value="h">Equipo local</option><option value="a">Equipo visitante</option></select></label>';
+    h += '<label class="isf"><span>Goleador (opcional)</span><input type="text" data-avp placeholder="Ej: Tomás"></label>';
+    h += '<label class="isf"><span>Minuto (opcional)</span><input type="text" data-avmin placeholder="Ej: 68"></label>';
+    h += '<div class="isp-g"><button type="button" class="isb pri" data-pa="sendgoal">⚽ Enviar aviso de gol</button></div>';
+    h += '<p class="isp-hint">Cargá el gol en el partido antes de enviar: el aviso usa el marcador que tenga cargado la app.</p>';
+    h += '<p class="isp-hint" id="isp-avmsg"></p>';
+    h += '<h4>Automáticos</h4><p class="isp-hint">Se mandan solos: "Arranca en 10 minutos" para cada partido, y cada noticia durante los 30 minutos siguientes a publicarla.</p>';
+    return h;
+  }
+  function avSay(t) { var el = panel && panel.querySelector('#isp-avmsg'); if (el) el.textContent = t; }
+  function sendGoal() {
+    var S0 = L().store || S();
+    var cfg = w.LSL_CONFIG || {};
+    if (!S0 || S0.mode !== 'cloud' || !cfg.supabaseUrl) { avSay('Para mandar avisos necesitás el modo nube (Supabase).'); return; }
+    if (!S0.cloud.sess()) { avSay('Entrá al panel con tu email y contraseña para mandar avisos.'); return; }
+    var mid = panel.querySelector('[data-avm]').value, m = (st().matches || []).filter(function (x) { return x.id === mid; })[0];
+    if (!m) { avSay('Elegí un partido.'); return; }
+    var side = panel.querySelector('[data-avs]').value;
+    var scorer = panel.querySelector('[data-avp]').value.trim() || tn(side === 'h' ? m.home : m.away);
+    var minute = panel.querySelector('[data-avmin]').value.trim();
+    avSay('Enviando…');
+    S0.cloud.token().then(function (tok) {
+      return fetch(cfg.supabaseUrl + '/functions/v1/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + tok },
+        body: JSON.stringify({ type: 'goal', home: tn(m.home), away: tn(m.away), hs: +m.hs || 0, as: +m.as || 0, minute: minute, scorer: scorer, side: side })
+      });
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+        avSay('✅ Aviso de gol enviado.');
+      });
+    }).catch(function (e) { avSay('No se pudo enviar: ' + e.message); });
+  }
 
   function renderTab(keepScroll) {
     var b = panel.querySelector('.isp-b'), top = b.scrollTop;
@@ -491,6 +546,7 @@
     if (pa === 'close') { closePanel(); if (L().ui && L().ui.toast) L().ui.toast('Isla guardada'); return; }
     if (pa === 'min') { panel.classList.toggle('min'); b.textContent = panel.classList.contains('min') ? '▴' : '▾'; return; }
     if (pa === 'test') { setOpen(!open); return; }
+    if (pa === 'sendgoal') { sendGoal(); return; }
     if (pa === 'tgoal') { var sg = st(), mg = liveMatches()[0] || nextMatch() || (sg && sg.matches[0]); if (!mg) { if (L().ui && L().ui.toast) L().ui.toast('Cargá un partido para probar'); return; } goalPop(mg, 'h'); return; }
     if (pa === 'tnews') { var sn = st(), nw = ((sn && sn.news) || []).slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); })[0]; if (!nw) { if (L().ui && L().ui.toast) L().ui.toast('No hay noticias para probar'); return; } newsPop(nw); return; }
     if (pa === 'next') { if (!open) setOpen(true); else { showSlide(idx + 1); armClose(); } return; }
