@@ -1,7 +1,6 @@
-name: Build Android APK (ventana a la web)
+name: Build Android APK (Local Nativa)
 
-# El APK solo muestra la web. Los cambios de js/css/datos se ven sin regenerarlo.
-# Este workflow solo corre cuando cambia ESTE archivo o a mano (Run workflow).
+# El APK ahora contiene todo el frontend adentro. Es 100% nativa y offline-first.
 on:
   workflow_dispatch:
   push:
@@ -51,21 +50,27 @@ jobs:
           echo "KEY_ALIAS_REAL=$ALIAS_REAL" >> "$GITHUB_ENV"
           echo "Firma OK"
 
-      - name: Crear proyecto Capacitor apuntando a la web
+      - name: Crear proyecto Capacitor con recursos locales
         run: |
+          # 1. Creamos la carpeta de distribución limpia
           mkdir -p public_dist
-          echo '<!doctype html><title>La Súper Liga</title>' > public_dist/index.html
+          
+          # 2. Copiamos tus archivos reales del repositorio a la carpeta que empaqueta la APK
+          cp index.html public_dist/ 2>/dev/null || true
+          cp manifest.webmanifest public_dist/ 2>/dev/null || true
+          cp -r css public_dist/ 2>/dev/null || true
+          cp -r js public_dist/ 2>/dev/null || true
+          cp -r data public_dist/ 2>/dev/null || true
+          
+          # 3. Configuramos Capacitor de forma nativa local (sin servidor remoto de Vercel)
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.lasuperliga.app",
             "appName": "La Super Liga",
-            "webDir": "public_dist",
-            "server": {
-              "url": "https://la-s-per-liga-2027.vercel.app/",
-              "cleartext": false
-            }
+            "webDir": "public_dist"
           }
           JSON
+          
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/app
           npx cap add android
@@ -89,7 +94,6 @@ jobs:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           mv release.jks android/release.jks
-          # versionCode crece con cada build, así Android siempre acepta la actualización
           cat >> android/app/build.gradle <<GRADLE
 
           android {
