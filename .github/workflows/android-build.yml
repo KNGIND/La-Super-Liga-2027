@@ -58,7 +58,7 @@ jobs:
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.lasuperliga.app",
-            "appName": "La Súper Liga",
+            "appName": "La Super Liga",
             "webDir": "public_dist",
             "server": {
               "url": "https://la-s-per-liga-2027.vercel.app/",
