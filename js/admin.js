@@ -14,10 +14,8 @@
     ['channels', 'Canales', 'tv', 'Dónde ver los partidos', 'c4'],
     ['league', 'Liga', 'trophy', 'Nombre, logo, puntos', 'c5'],
     ['design', 'Diseño', 'sliders', 'Colores, navegación, estilo', 'c6'],
-    ['ann', 'Avisos', 'bell', 'Notificaciones y actualizaciones', 'c7'],
     ['cloud', 'Nube', 'db', 'Conexión con Supabase', 'c8'],
-    ['data', 'Datos', 'db', 'Exportar, importar, contraseña', 'c9'],
-    ['game', 'Juego', 'trophy', 'Ranking, pronósticos y rachas', 'c10']
+    ['data', 'Datos', 'db', 'Exportar, importar, contraseña', 'c9']
   ];
   var COMP = [['liga', 'Liga'], ['copa', 'Copa'], ['amistoso', 'Amistoso']];
   var STAT = [['upcoming', 'Próximo'], ['live', 'En vivo'], ['paused', 'Descanso'], ['finished', 'Finalizado']];

@@ -470,6 +470,8 @@
   // app.js llama a tabOut ANTES de cambiar el contenido y a tabIn DESPUÉS: así el contenido viejo sale mientras entra el nuevo
   FX.tabOut = function (view, tab) {
     var prev = lastTab; lastTab = tab; var T = transMode();
+    // Si se cambia de pestaña varias veces seguidas, solo debe quedar un fantasma de salida.
+    [].forEach.call(d.querySelectorAll('.fx-ghost'), function (node) { if (node.parentNode) node.parentNode.removeChild(node); });
     if (T === 'off' || !prev || prev === tab || !view) return null;
     var r = view.getBoundingClientRect(), g = d.createElement('div'), c = view.cloneNode(true);
     c.removeAttribute('id'); c.classList.remove('enter');
@@ -483,7 +485,13 @@
   FX.tabIn = function (tok, view) {
     if (!tok) return;
     view.setAttribute('data-fxd', tok.dir);
-    setTimeout(function () { if (tok.g.parentNode) tok.g.parentNode.removeChild(tok.g); view.removeAttribute('data-fxd'); }, 520);
+    setTimeout(function () {
+      if (tok.g.parentNode) tok.g.parentNode.removeChild(tok.g);
+      // Al quitar data-fxd sin quitar .enter, el CSS genérico .view.enter volvía
+      // a arrancar otra animación y parecía que la sección se recargaba/parpadeaba.
+      view.classList.remove('enter');
+      view.removeAttribute('data-fxd');
+    }, 520);
   };
   // La tarjeta tocada se expande hasta convertirse en el detalle (solo en modo "Morphing")
   function wrapSheet() {

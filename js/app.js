@@ -46,7 +46,7 @@
 
   /* ---------- fondos de la página (los elige el admin) ---------- */
   var BGS = {
-    navy: { bg: '#04101F', bg2: '#071A2E', card: '#0B1E33', card2: '#10283F', line: '#173653' },
+    navy: { bg: '#0B0B0C', bg2: '#121214', card: '#1E1E24', card2: '#262630', line: '#242429' },
     carbon: { bg: '#0B0C0F', bg2: '#121419', card: '#171A20', card2: '#1E222A', line: '#2A2F39' },
     violet: { bg: '#0D0A1F', bg2: '#140F2E', card: '#1A1440', card2: '#241C55', line: '#33296F' },
     forest: { bg: '#04140F', bg2: '#082018', card: '#0D2B21', card2: '#13382B', line: '#1C4A39' },
@@ -66,9 +66,9 @@
   }
   LSL.palette = palette;
   function applyDesign() {
-    var d = S.state.design, ac = U.hexOr(d.accent, '#27C4C9'), ac2 = U.hexOr(d.accent2, '#FFD226'), b = palette(d);
+    var d = S.state.design, ac = U.hexOr(d.accent, '#00D9FF'), ac2 = U.hexOr(d.accent2, '#FFD700'), b = palette(d);
     var css = ':root{--ac:' + ac + ';--ac2:' + ac2 + ';--on-ac:' + U.ink(ac) + ';--ac-soft:' + U.alpha(ac, 0.16) +
-      ';--acg1:' + U.mix(ac, '#000000', 0.4) + ';--acg2:' + U.mix(U.hue(ac, 48), '#000000', 0.32) + ';--r:' + (+d.radius || 16) + 'px}' +
+      ';--acg1:' + U.mix(ac, '#000000', 0.4) + ';--acg2:' + U.mix(U.hue(ac, 48), '#000000', 0.32) + ';--r:' + (+d.radius || 20) + 'px}' +
       ':root[data-theme=dark]{--bg:' + b.bg + ';--bg2:' + b.bg2 + ';--card:' + b.card + ';--card2:' + b.card2 + ';--line:' + b.line + ';--act:' + ac + ';--pts:' + ac2 + '}' +
       ':root[data-theme=light]{--act:' + U.mix(ac, '#000000', 0.42) + ';--pts:' + U.mix(ac2, '#000000', 0.55) + '}';
     css += ':root[data-theme=gray],:root[data-theme=amoled]{--act:' + ac + ';--pts:' + ac2 + '}';
@@ -86,12 +86,30 @@
     var ov = doc.getElementById('lsl-code-override-css');
     if (ov) doc.head.appendChild(ov);
   }
+  function applyNativeStatusBar(theme, color) {
+    // Capacitor Style.Dark = iconos claros; Style.Light = iconos oscuros.
+    // El puente se genera en la compilación Android; el fallback cubre versiones antiguas.
+    var nativeBar = w.LSLNativeStatusBar;
+    var cap = w.Capacitor, plugins = cap && cap.Plugins, bar = plugins && plugins.StatusBar;
+    if (!nativeBar && !bar) return;
+    var style = theme === 'light' ? 'LIGHT' : 'DARK';
+    try {
+      var p = nativeBar ? nativeBar.setStyle(theme) : bar.setStyle({ style: style });
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+    try {
+      var q = nativeBar ? nativeBar.setBackgroundColor(color) : bar.setBackgroundColor({ color: color });
+      if (q && q.catch) q.catch(function () {});
+    } catch (e) {}
+  }
   function applyTheme() {
     var TH = { dark: 1, light: 1, gray: 1, amoled: 1 }, dm = S.state.design.mode;
     var m = (P.mode && TH[P.mode]) ? P.mode : (TH[dm] ? dm : 'dark');
     root.setAttribute('data-theme', m);
+    var color = { light: '#EEF3F7', gray: '#202124', amoled: '#000000' }[m] || palette(S.state.design).bg;
     var mt = $('meta[name=theme-color]');
-    if (mt) mt.setAttribute('content', { light: '#EEF3F7', gray: '#202124', amoled: '#000000' }[m] || palette(S.state.design).bg);
+    if (mt) mt.setAttribute('content', color);
+    applyNativeStatusBar(m, color);
   }
   function autoPerf() {
     if (LSL.probeLite) return 'lite';

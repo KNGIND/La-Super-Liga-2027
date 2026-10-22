@@ -401,7 +401,7 @@
     var p = LSL.profile.get() || { name: 'Invitado' }, t = S.team(P.fav), rows = S.standings(), pos = -1, row = null;
     rows.forEach(function (r, i) { if (t && r.id === t.id) { pos = i; row = r; } });
     var h = '<h1 class="h">Perfil</h1>';
-    h += '<section class="pf" style="--c1:' + esc(U.hexOr(t && t.color, '#27C4C9')) + '"><div class="pf-av">' + avatar(p, 104) + (t ? '<span class="pf-tm">' + crest(t, 'm') + '</span>' : '') + '</div>' +
+    h += '<section class="profile-card" style="--c1:' + esc(U.hexOr(t && t.color, '#27C4C9')) + '"><div class="pf-av">' + avatar(p, 104) + (t ? '<span class="pf-tm">' + crest(t, 'm') + '</span>' : '') + '</div>' +
       '<h2 class="pf-n">' + esc(p.name) + '</h2><p class="pf-s">' + (t ? esc(t.name) + (row ? ' · ' + (pos + 1) + '° · ' + row.pts + ' pts' : '') : 'Todavía no elegiste equipo') + '</p>' +
       '<div class="btns pf-b"><button class="btn ghost sm" data-ob="photo">' + ic('camera') + 'Foto</button><button class="btn ghost sm" data-ob="name">' + ic('edit') + 'Nombre</button><button class="btn ghost sm" data-ob="team">' + ic('users') + 'Equipo</button></div></section>';
     if (row) {
@@ -449,6 +449,20 @@
     return h + '</div>';
   }
 
+  var ATTEND_KEY = 'lsl:match-attendance:v1';
+  function attendanceMap() {
+    try { var v = JSON.parse(localStorage.getItem(ATTEND_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; }
+    catch (e) { return {}; }
+  }
+  function attendanceIsSet(id) { return !!attendanceMap()[id]; }
+  function attendanceToggle(id) {
+    var map = attendanceMap(), next = !map[id];
+    if (next) map[id] = true; else delete map[id];
+    try { localStorage.setItem(ATTEND_KEY, JSON.stringify(map)); }
+    catch (e) { UI.toast('No se pudo guardar la asistencia en este dispositivo.', 2600, 'warn'); return null; }
+    return next;
+  }
+
   function matchSheet(m) {
     var h = S.team(m.home), a = S.team(m.away), ch = S.channel(m.channel), ts = T.ts(m.date), live = isLive(m), f = S.state.features;
     var tabs = [['sum', 'Resumen']]; if (f.lineups) tabs.push(['lin', 'Alineaciones']); tabs.push(['inf', 'Info']);
@@ -461,7 +475,19 @@
       (live ? '<span class="live"><i></i>' + esc(st) + '</span>' : (st ? '<span class="chip">' + st + '</span>' : '')) + '</div>' +
       '<div class="hero-row"><div class="tm">' + crest(h, 'x') + '<span class="hn" id="sheet-t">' + esc(h ? h.name : 'Equipo') + '</span></div><div class="hero-mid">' + mid + '</div><div class="tm">' + crest(a, 'x') + '<span class="hn">' + esc(a ? a.name : 'Equipo') + '</span></div></div>' +
       '<p class="mh-sub">' + esc(T.long(ts)) + ' · ' + T.time(ts) + (m.leg2 && m.firstLeg ? ' · Ida: ' + esc(m.firstLeg) : '') + (m.pens ? ' · Penales: ' + esc(m.pens) : '') + '</p></div>';
-    out += '<div class="sb-in">' + (LSL.game ? LSL.game.predHTML(m) : '') + seg(tabs, SH.tab, 'stab');
+    var prediction = LSL.game ? LSL.game.predHTML(m) : '';
+    if (!prediction) {
+      var predMessage = (m.status === 'upcoming')
+        ? 'Las predicciones todavía no están habilitadas para esta liga.'
+        : 'El plazo para pronosticar este partido ya cerró.';
+      prediction = '<div class="pr-box"><div class="pr-t"><b>Pronóstico</b><small>' + esc(predMessage) + '</small></div></div>';
+    }
+    var attending = attendanceIsSet(m.id);
+    out += '<div class="sb-in"><div class="match-quick-actions">' +
+      '<button type="button" class="match-action' + (attending ? ' is-attending' : '') + '" data-attendance="' + esc(m.id) + '" aria-pressed="' + (attending ? 'true' : 'false') + '" title="La asistencia se guarda en este dispositivo"' + (m.status !== 'upcoming' ? ' disabled' : '') + '>' +
+      '<span class="match-action-ic">' + (attending ? '✓' : '＋') + '</span><span>' + (attending ? 'Asistencia confirmada' : 'Confirmar asistencia') + '</span></button>' +
+      '<button type="button" class="match-action" data-pred-focus><span class="match-action-ic">⚽</span><span>Predicción</span></button></div>' +
+      '<div class="match-prediction" id="match-prediction">' + prediction + '</div>' + seg(tabs, SH.tab, 'stab');
 
     if (SH.tab === 'sum') {
       var ev = (m.events || []).slice().sort(function (x, y) { return (parseInt(x.min, 10) || 0) - (parseInt(y.min, 10) || 0); });
@@ -543,6 +569,22 @@
     sheet.addEventListener('click', function (e) {
       if (e.target.closest('[data-close]')) return UI.closeSheet();
       if (LSL.game && LSL.game.onSheetClick(e)) return;
+      var attendanceBtn = e.target.closest('[data-attendance]');
+      if (attendanceBtn) {
+        var attendanceId = attendanceBtn.getAttribute('data-attendance');
+        var confirmed = attendanceToggle(attendanceId);
+        if (confirmed !== null) {
+          UI.toast(confirmed ? 'Asistencia confirmada en este dispositivo' : 'Asistencia cancelada');
+          UI.renderSheet();
+        }
+        return;
+      }
+      var predBtn = e.target.closest('[data-pred-focus]');
+      if (predBtn) {
+        var target = body.querySelector('#match-prediction');
+        if (target) target.scrollIntoView({ behavior: document.documentElement.getAttribute('data-perf') === 'lite' ? 'auto' : 'smooth', block: 'center' });
+        return;
+      }
       var t = e.target.closest('[data-seg="stab"]'); if (t) { SH.tab = t.getAttribute('data-v'); UI.renderSheet(); if (UI.onSheet) UI.onSheet(); return; }
       var sd = e.target.closest('[data-side]'); if (sd) { SH.side = sd.getAttribute('data-side'); return UI.renderSheet(); }
     });
@@ -566,4 +608,147 @@
     el.textContent = msg; el.className = 'toast on' + (kind ? ' ' + kind : ''); clearTimeout(toastT);
     toastT = setTimeout(function () { el.classList.remove('on'); }, ms || 2200);
   };
+
+  /* ---------- Minijuego "Cabezones" — Canvas 2D nativo, motor aislado ----------
+     No depende de S (store/Supabase) ni toca el estado de la app: solo lee el
+     DOM que agregamos en index.html (#container-arcade, #canvasFutbol) y se
+     engancha a LSL.pushLayer/popLayer (si existen) para que el botón "atrás"
+     de Android cierre el juego igual que la ventanita o el menú lateral. */
+  (function () {
+    var doc = document;
+    var W = 640, H = 360, GROUND = H - 34, GOAL_W = 10, GOAL_H = 90;
+    var GRAV = 0.4, BALL_GRAV = 0.3, RUN = 4.5, JUMP = -10.5, KICK = 7.5;
+    var cont, canvas, ctx, scoreEl, btnOpen, btnClose;
+    var keys = {}, running = false, raf = 0;
+    var score = { p: 0, b: 0 }, player, bot, ball;
+
+    function initEntities() {
+      player = { x: W * 0.28, y: GROUND - 26, r: 20, vx: 0, vy: 0, grounded: true, bodyW: 14, bodyH: 40, dir: 1 };
+      bot = { x: W * 0.72, y: GROUND - 26, r: 20, vx: 0, vy: 0, grounded: true, bodyW: 14, bodyH: 40, dir: -1 };
+      ball = { x: W / 2, y: GROUND - 100, r: 11, vx: (Math.random() < 0.5 ? -1 : 1) * 2, vy: 0 };
+    }
+    function updateScoreUI() { if (scoreEl) scoreEl.textContent = score.p + ' \u2013 ' + score.b; }
+    function goal(side) { if (side === 'p') score.p++; else score.b++; updateScoreUI(); initEntities(); }
+
+    function stepPlayer() {
+      player.vx = 0;
+      if (keys.ArrowLeft) { player.vx = -RUN; player.dir = -1; }
+      if (keys.ArrowRight) { player.vx = RUN; player.dir = 1; }
+      if (keys.ArrowUp && player.grounded) { player.vy = JUMP; player.grounded = false; }
+      player.vy += GRAV; player.x += player.vx; player.y += player.vy;
+      if (player.x < player.r + 6) player.x = player.r + 6;
+      if (player.x > W - player.r - 6) player.x = W - player.r - 6;
+      if (player.y >= GROUND - 26) { player.y = GROUND - 26; player.vy = 0; player.grounded = true; }
+    }
+    function stepBot() {
+      var dx = ball.x - bot.x; bot.vx = 0;
+      if (Math.abs(dx) > 14) bot.vx = dx > 0 ? RUN * 0.82 : -RUN * 0.82;
+      var ballAbove = ball.y < bot.y - 10;
+      if (ballAbove && Math.abs(dx) < 70 && bot.grounded && Math.random() < 0.18) { bot.vy = JUMP; bot.grounded = false; }
+      bot.dir = dx > 0 ? 1 : -1;
+      bot.vy += GRAV; bot.x += bot.vx; bot.y += bot.vy;
+      if (bot.x < 20) bot.x = 20;
+      if (bot.x > W - 20) bot.x = W - 20;
+      if (bot.y >= GROUND - 26) { bot.y = GROUND - 26; bot.vy = 0; bot.grounded = true; }
+    }
+    /* Formula de cabezazo pedida: VelocidadX = cos(angulo)*7.5, VelocidadY = sin(angulo)*7.5 - 2 */
+    function headCollision(p) {
+      var dx = ball.x - p.x, dy = ball.y - (p.y - 8), dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < p.r + ball.r) {
+        var angle = Math.atan2(dy, dx);
+        ball.vx = Math.cos(angle) * KICK;
+        ball.vy = Math.sin(angle) * KICK - 2;
+        var overlap = (p.r + ball.r) - dist || 1;
+        ball.x += Math.cos(angle) * overlap; ball.y += Math.sin(angle) * overlap;
+      }
+    }
+    function bodyCollision(p) {
+      var dx = ball.x - p.x, dy = ball.y - (p.y + p.bodyH / 2 - 10);
+      var halfW = p.bodyW / 2 + ball.r, halfH = p.bodyH / 2 + ball.r;
+      if (Math.abs(dx) < halfW && Math.abs(dy) < halfH) {
+        var push = dx > 0 ? 1 : -1;
+        ball.vx = push * 4 + p.vx * 0.5; ball.vy = -3; ball.x = p.x + push * halfW;
+      }
+    }
+    function stepBall() {
+      ball.vy += BALL_GRAV; ball.x += ball.vx; ball.y += ball.vy; ball.vx *= 0.995;
+      if (ball.y > GROUND - ball.r) { ball.y = GROUND - ball.r; ball.vy *= -0.62; ball.vx *= 0.9; if (Math.abs(ball.vy) < 0.6) ball.vy = 0; }
+      if (ball.y < ball.r) { ball.y = ball.r; ball.vy *= -0.5; }
+      var goalTop = GROUND - GOAL_H;
+      if (ball.x < ball.r + 6) { if (ball.y > goalTop) return goal('b'); ball.x = ball.r + 6; ball.vx *= -0.7; }
+      if (ball.x > W - ball.r - 6) { if (ball.y > goalTop) return goal('p'); ball.x = W - ball.r - 6; ball.vx *= -0.7; }
+      headCollision(player); headCollision(bot); bodyCollision(player); bodyCollision(bot);
+    }
+
+    function drawField() {
+      ctx.clearRect(0, 0, W, H);
+      var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#121214'); g.addColorStop(1, '#0b0b0c');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 1;
+      for (var i = 0; i < W; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, GROUND); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, GROUND); ctx.lineTo(W, GROUND); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 3;
+      ctx.strokeRect(2, GROUND - GOAL_H, GOAL_W, GOAL_H);
+      ctx.strokeRect(W - GOAL_W - 2, GROUND - GOAL_H, GOAL_W, GOAL_H);
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.beginPath(); ctx.arc(W / 2, GROUND, 50, Math.PI, 0); ctx.stroke();
+    }
+    function drawDude(p, color) {
+      ctx.save(); ctx.translate(p.x, p.y);
+      ctx.fillStyle = color;
+      ctx.fillRect(-p.bodyW / 2, 2, p.bodyW, p.bodyH - 10);
+      ctx.fillRect(p.dir * 2 - 2, p.bodyH - 10, 7, 10);
+      ctx.beginPath(); ctx.arc(0, -8, p.r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+      ctx.restore();
+    }
+    function drawBall() {
+      ctx.save(); ctx.translate(ball.x, ball.y);
+      ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#F5F5F7'; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.restore();
+    }
+
+    function loop() {
+      if (!running) return;
+      stepPlayer(); stepBot(); stepBall();
+      drawField(); drawDude(bot, '#FF006E'); drawDude(player, '#00D9FF'); drawBall();
+      raf = requestAnimationFrame(loop);
+    }
+    function onKeyDown(e) { if (running && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp')) { e.preventDefault(); keys[e.key] = true; } }
+    function onKeyUp(e) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp') keys[e.key] = false; }
+
+    function start() {
+      if (running) return;
+      running = true; keys = {}; score = { p: 0, b: 0 }; updateScoreUI(); initEntities();
+      doc.addEventListener('keydown', onKeyDown); doc.addEventListener('keyup', onKeyUp);
+      raf = requestAnimationFrame(loop);
+    }
+    function stop() {
+      running = false; cancelAnimationFrame(raf);
+      doc.removeEventListener('keydown', onKeyDown); doc.removeEventListener('keyup', onKeyUp);
+    }
+    function closeArcade() {
+      cont.classList.remove('on'); stop();
+      setTimeout(function () { cont.style.display = 'none'; }, 180);
+    }
+    function openArcade() {
+      cont.style.display = 'flex'; void cont.offsetWidth; cont.classList.add('on'); start();
+      if (w.LSL && w.LSL.pushLayer) w.LSL.pushLayer(closeArcade);
+    }
+    UI.closeArcade = closeArcade; UI.openArcade = openArcade;
+
+    function boot() {
+      cont = doc.getElementById('container-arcade'); if (!cont) return;
+      canvas = doc.getElementById('canvasFutbol'); ctx = canvas.getContext('2d');
+      scoreEl = doc.getElementById('arc-score');
+      btnOpen = doc.getElementById('btn-arcade'); btnClose = doc.getElementById('btn-volver-arcade');
+      if (btnOpen) btnOpen.addEventListener('click', openArcade);
+      if (btnClose) btnClose.addEventListener('click', function () {
+        if (w.LSL && w.LSL.popLayer) w.LSL.popLayer(); else closeArcade();
+      });
+    }
+    boot();
+  })();
 })(window);
