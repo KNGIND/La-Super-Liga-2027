@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>La Super Liga</title>
 <meta name="description" content="Calendario, tabla y partidos de La Súper Liga.">
-<meta name="theme-color" content="#04101F">
+<meta name="theme-color" content="#0B0B0C">
+<meta name="color-scheme" content="dark light">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -48,18 +49,12 @@ window.__LSL_CODE_READY__ = new Promise(function (resolve) {
     .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(out); } });
 });
 </script>
-<script src="neon-striker/game-data.js"></script>
-<script src="neon-striker/profile-store.js"></script>
-<script src="neon-striker/sounds.js"></script>
-<script src="neon-striker/soccer-engine.js"></script>
-<script src="neon-striker/neon-striker.js"></script>
 <!-- Una sola tipografía web (títulos y números). El texto usa la fuente del sistema: cero descarga. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap"></noscript>
 <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="neon-striker/neon-striker.css">
 <script>
 /* Si hay un override PUBLICADO (o, para el admin en vista previa, un borrador)
    de css/styles.css, lo agrega ENCIMA del original ni bien está listo — así la
@@ -139,11 +134,6 @@ window.__LSL_CODE_READY__.then(function (data) {
 <main id="view" class="view" tabindex="-1"></main>
 <nav id="nav" data-nav="floating" aria-label="Navegación principal"></nav>
 
-<!-- Acceso al minijuego "Cabezones" — flotante, independiente de la nav dinámica (ui.js/app.js la reescriben con innerHTML en cada render) -->
-<button id="btn-neon" class="btn-arcade" data-open-arcade aria-label="Jugar Cabezones">
-  <svg class="ic" aria-hidden="true"><use href="#i-ball"/></svg>
-</button>
-
 <!-- Ventanita de detalle (partido / noticia) -->
 <div class="sheet" id="sheet" hidden>
   <div class="scrim" data-close></div>
@@ -155,21 +145,6 @@ window.__LSL_CODE_READY__.then(function (data) {
 </div>
 
 <div class="dr" id="drawer" hidden></div>
-
-<!-- Minijuego "Cabezones" — Canvas 2D nativo, cero dependencias, oculto hasta que se abre -->
-<div id="container-arcade" style="display:none">
-  <div class="arc-top">
-    <span class="arc-score" id="arc-score">0 – 0</span>
-    <button class="btn-volver" id="btn-volver-arcade" data-close-arcade>
-      <svg class="ic" aria-hidden="true"><use href="#i-close"/></svg>
-      Volver al menú
-    </button>
-  </div>
-  <div class="arc-stage">
-    <canvas id="canvasFutbol" width="640" height="360"></canvas>
-  </div>
-  <p class="arc-hint">← → moverse · ↑ saltar</p>
-</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="admin-root"></div>
@@ -240,31 +215,6 @@ window.__LSL_CODE_READY__.then(function (data) {
       return code ? { path: p, code: code, kind: useDraft ? 'draft' : 'published' } : { path: p };
     }));
   }, loadOriginal);
-})();
-</script>
-<div id="lsl-isl" role="button" aria-label="Isla decorativa"><i></i><span id="lsl-isl-t">La Súper Liga</span></div>
-<script>
-(function(){
-  var el=document.getElementById('lsl-isl'); if(!el) return;
-  try{ sessionStorage.removeItem('lsl:isl-x'); }catch(e){}   // la isla ya no se puede ocultar
-  var open=false,timer=0,sx=0,sy=0,dx=0,dy=0,down=false,moved=false;
-  function setOpen(v){
-    open=v; el.classList.toggle('open',v); clearTimeout(timer);
-    if(v){ try{ var n=window.LSL&&LSL.store&&LSL.store.state&&LSL.store.state.league&&LSL.store.state.league.name; if(n) document.getElementById('lsl-isl-t').textContent=n; }catch(e){}
-      timer=setTimeout(function(){ setOpen(false); },3000); }
-  }
-  el.addEventListener('pointerdown',function(e){ down=true; moved=false; sx=e.clientX; sy=e.clientY; dx=dy=0; el.classList.add('drag'); try{ el.setPointerCapture(e.pointerId); }catch(_){} });
-  el.addEventListener('pointermove',function(e){
-    if(!down) return; dx=e.clientX-sx; dy=e.clientY-sy;
-    if(Math.abs(dx)>6||Math.abs(dy)>6) moved=true;
-    if(moved){ var ty=Math.max(-8,Math.min(dy*.25,10)), tx=Math.max(-14,Math.min(dx*.25,14)); el.style.transform='translate('+tx+'px,'+ty+'px)';  }
-  });
-  function end(){
-    if(!down) return; down=false; el.classList.remove('drag');
-    el.style.transform=''; el.style.opacity='';
-    if(!moved) setOpen(!open);
-  }
-  el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
 })();
 </script>
 </body>
