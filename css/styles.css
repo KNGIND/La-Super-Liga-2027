@@ -4,19 +4,21 @@
 
 /* ===== Tokens ===== */
 :root {
-  --bg: #04101F; --bg2: #071A2E; --card: #0B1E33; --card2: #10283F; --line: #173653;
-  --tx: #EAF4FA; --mut: #8CA6BB; --dim: #5F7A91;
-  --ac: #27C4C9; --ac2: #FFD226; --on-ac: #032126; --ac-soft: rgba(39,196,201,.16);
-  --act: #27C4C9; --pts: #FFD226; --live: #FF5468;
-  --acg1: #187579; --acg2: #1F3A7A;
-  --r: 16px;
+  --bg: #0B0B0C; --bg2: #121214; --card: #1E1E24; --card2: #262630; --line: #242429;
+  --tx: #F5F5F7; --mut: #A0A0A8; --dim: #6B6B74;
+  --ac: #00D9FF; --ac2: #FFD700; --on-ac: #04101A; --ac-soft: rgba(0,217,255,.12);
+  --act: #00D9FF; --pts: #FFD700; --live: #FF006E;
+  --acg1: #0066CC; --acg2: #FF0080;
+  --r: 20px;
   --fd: 'Big Shoulders Display', 'Roboto Condensed', 'sans-serif-condensed', 'Arial Narrow', sans-serif;
   --fb: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --top: 52px; --navh: 64px;
   --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
-  --sh1: 0 10px 26px rgba(0,0,0,.38); --sh2: 0 6px 16px rgba(0,0,0,.4);
-  --nm: 7px 7px 16px rgba(0,0,0,.5), -5px -5px 14px rgba(255,255,255,.045);
-  --nm-in: inset 3px 3px 7px rgba(0,0,0,.5), inset -3px -3px 7px rgba(255,255,255,.05);
+  --sh1: 0 12px 32px rgba(0,0,0,.6), 0 0 20px rgba(0,217,255,.12);
+  --sh2: 0 8px 20px rgba(0,0,0,.5), 0 0 12px rgba(0,217,255,.08);
+  --nm: 7px 7px 16px rgba(0,0,0,.6), -5px -5px 14px rgba(255,255,255,.03);
+  --nm-in: inset 3px 3px 7px rgba(0,0,0,.6), inset -3px -3px 7px rgba(255,255,255,.03);
+  --glass-bg: rgba(18,18,20,.68); --glass-border: rgba(255,255,255,.1); --glass-blur: 20px;
 }
 /* App instalada (PWA/APK): algunos WebView de Android (sobre todo con el
    "edge-to-edge" que Android 15+ activa solo) no informan bien
@@ -27,6 +29,8 @@
 @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
   :root { --sat: max(env(safe-area-inset-top, 0px), 28px); }
 }
+:root[data-theme=dark], :root[data-theme=gray], :root[data-theme=amoled] { color-scheme: dark; }
+:root[data-theme=light] { color-scheme: light; }
 :root[data-theme=light] {
   --bg: #EEF3F7; --bg2: #E6EDF3; --card: #FFFFFF; --card2: #F2F6F9; --line: #D5E0E8;
   --tx: #0A1B2E; --mut: #4F667A; --dim: #7A8FA1; --live: #D6243A;
@@ -359,11 +363,20 @@ span.crest b { font-weight: 900; padding-bottom: 3px; }
 [data-perf=lite] [data-nav=glass] .nav-bar::before, [data-perf=lite] [data-nav=dock] .nav-bar::before { opacity: 1; }
 [data-nav=glass] .nav-i.on::after { content: ""; position: absolute; bottom: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--act); }
 
-/* 03 Flotante: barra suelta con botón central elevado */
-[data-nav=floating] .nav-bar { width: calc(100% - 24px); margin-bottom: 12px; border-radius: 28px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--sh1); }
-[data-nav=floating] .c .ico, [data-nav=fab] .c .ico { width: 54px; height: 54px; border-radius: 50%; background: var(--ac); color: var(--on-ac); transform: translateY(-14px); box-shadow: var(--sh2); }
-[data-nav=floating] .c .lb, [data-nav=fab] .c .lb { transform: translateY(-12px); }
+/* 03 Flotante: glass premium + glow neón */
+[data-nav=floating] .nav-bar { width: calc(100% - 24px); height: 70px; padding: 6px; margin-bottom: 12px; border-radius: 24px; background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--sh1); }
+[data-perf=full] [data-nav=floating] .nav-bar { -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8); backdrop-filter: blur(var(--glass-blur)) saturate(1.8); }
+[data-perf=lite] [data-nav=floating] .nav-bar { background: var(--card); }
+[data-nav=floating] .nav-i { transition: transform .22s cubic-bezier(.34,1.56,.64,1); }
+[data-perf=full] [data-nav=floating] .nav-i:active { transform: scale(.94); }
+[data-nav=floating] .nav-i.on:not(.c) .ico { background: var(--ac-soft); border-radius: 14px; }
+[data-nav=floating] .nav-i.on:not(.c) .lb { color: var(--act); font-weight: 700; }
+[data-nav=floating] .c .ico, [data-nav=fab] .c .ico { width: 54px; height: 54px; border-radius: 16px; background: var(--ac); color: var(--on-ac); transform: translateY(-14px); box-shadow: 0 0 20px rgba(0,217,255,.4), var(--sh2); }
+[data-nav=floating] .c .lb, [data-nav=fab] .c .lb { transform: translateY(-12px); color: var(--act); font-weight: 700; }
 [data-nav=floating] .c .ic, [data-nav=fab] .c .ic { width: 27px; height: 27px; }
+@media (hover: hover) and (pointer: fine) {
+  [data-perf=full] [data-nav=floating] .nav-i:not(.on):hover .ico { background: rgba(255,255,255,.05); border-radius: 14px; }
+}
 
 /* 04 Neumórfico: relieve suave */
 [data-nav=neumorph] .nav-bar { width: calc(100% - 28px); margin-bottom: 12px; border-radius: 26px; background: var(--bg2); box-shadow: var(--nm); }
@@ -502,9 +515,9 @@ span.crest b { font-weight: 900; padding-bottom: 3px; }
 .dr-f { padding: 12px 16px calc(14px + var(--sab)); color: var(--dim); font-size: 12px; }
 
 /* ===== Perfil ===== */
-.pf { position: relative; padding: 24px 14px 16px; border-radius: calc(var(--r) + 6px); background: var(--card); border: 1px solid var(--line); overflow: hidden; text-align: center; }
-.pf::before { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, var(--c1, var(--ac)) 0, transparent 62%); opacity: .3; pointer-events: none; }
-.pf > * { position: relative; }
+.profile-card { position: relative; inset: auto; right: auto; top: auto; left: auto; bottom: auto; font: inherit; letter-spacing: normal; color: inherit; padding: 24px 14px 16px; border-radius: calc(var(--r) + 6px); background: var(--card); border: 1px solid var(--line); overflow: hidden; text-align: center; width: 100%; min-width: 0; }
+.profile-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, var(--c1, var(--ac)) 0, transparent 62%); opacity: .3; pointer-events: none; }
+.profile-card > * { position: relative; }
 .pf-av { position: relative; width: 104px; margin: 0 auto; }
 .pf-av .av { border: 3px solid rgba(255,255,255,.85); }
 .pf-tm { position: absolute; right: -14px; bottom: -6px; }
@@ -585,6 +598,16 @@ span.crest b { font-weight: 900; padding-bottom: 3px; }
   .livechip, .season { padding: 0 8px; }
 }
 
+/* Acciones rápidas del detalle del partido */
+.match-quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.match-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; min-height: 44px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 13px; background: var(--card); color: var(--tx); font-size: 12.5px; font-weight: 700; text-align: center; }
+.match-action .match-action-ic { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 7px; background: var(--card2); color: var(--act); font-size: 15px; }
+.match-action.is-attending { border-color: var(--act); background: var(--ac-soft); color: var(--act); }
+.match-action:disabled { opacity: .48; cursor: not-allowed; }
+.match-prediction { scroll-margin: 18px; }
+.match-prediction:empty { display: none; }
+@media (max-width: 370px) { .match-quick-actions { grid-template-columns: 1fr; } }
+
 /* Juego: pronósticos y ranking */
 .pr-box { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); }
 .pr-box.col { flex-direction: column; align-items: stretch; }
@@ -609,55 +632,24 @@ span.crest b { font-weight: 900; padding-bottom: 3px; }
 .rk-n { flex: 1; min-width: 0; } .rk-n b { display: block; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rk-n small { color: var(--mut); font-size: 12px; }
 .rk-pt { font: 800 22px/1 var(--fd); text-align: right; } .rk-pt small { display: block; font: 600 10.5px/1.2 var(--fb); color: var(--mut); }
 
-/* ==========================================================================
-   BREAKPOINTS ADAPTADOS (Basados en la guía de diseño responsivo)
-   ========================================================================== */
-
-/* 1. MÓVIL (Por defecto va el código base del archivo. Aquí añadimos reglas específicas hasta 575.98px) */
-@media (max-width: 575.98px) {
-  .brand { font-size: 17px; }
-  .top { gap: 4px; padding-right: 8px; }
-  .livechip, .season { padding: 0 8px; }
-}
-
-/* 2. TABLET (Desde 768px hasta 991.98px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .top { 
-    padding-left: max(14px, calc((100vw - 640px) / 2)); 
-    padding-right: max(14px, calc((100vw - 640px) / 2)); 
-  }
-}
-
-/* 3. DESKTOP / PANTALLAS ESTÁNDAR (Desde 992px hasta 1199.98px) */
-@media (min-width: 992px) and (max-width: 1199.98px) {
+/* ---------- Pantallas grandes: tablet, PC y TV (el celular queda igual) ---------- */
+@media (min-width: 900px) {
   .view { max-width: 980px; padding-left: 20px; padding-right: 20px; }
-  .top { 
-    padding-left: max(14px, calc((100vw - 980px) / 2 + 6px)); 
-    padding-right: max(14px, calc((100vw - 980px) / 2 + 6px)); 
-  }
+  .top { padding-left: max(14px, calc((100vw - 980px) / 2 + 6px)); padding-right: max(14px, calc((100vw - 980px) / 2 + 6px)); }
   .view .stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .view .stack > .empty, .view .stack > .note, .view .stack > h2, .view .stack > h3 { grid-column: 1 / -1; }
 }
-
-/* 4. EXTRA LARGE DEVICES / PANTALLAS GRANDES (Desde 1200px en adelante) */
-@media (min-width: 1200px) {
+@media (min-width: 1280px) {
   .view { max-width: 1240px; }
-  .top { 
-    padding-left: max(14px, calc((100vw - 1240px) / 2 + 6px)); 
-    padding-right: max(14px, calc((100vw - 1240px) / 2 + 6px)); 
-  }
-  /* En pantallas muy grandes dividimos el contenido en 3 columnas */
-  .view .stack { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .view .stack > .empty, .view .stack > .note, .view .stack > h2, .view .stack > h3 { grid-column: 1 / -1; }
+  .top { padding-left: max(14px, calc((100vw - 1240px) / 2 + 6px)); padding-right: max(14px, calc((100vw - 1240px) / 2 + 6px)); }
+  .view .stack { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-
-/* Soporte para pantallas gigantes, efectos hover y temas extra (Permanecen intactos) */
 @media (min-width: 1700px) { .view { zoom: 1.2; } }
 @media (min-width: 2400px) { .view { zoom: 1.6; } }
 @media (hover: hover) and (pointer: fine) { .mc:hover, .nw:hover, .hero:hover { filter: brightness(1.06); } }
 
 /* ===== Temas extra: Gris (estilo AOSP) y Negro total (estilo iOS oscuro) ===== */
-:root[data-theme=gray] { --bg: #202124; --bg2: #292A2D; --card: #303134; --card2: #3C4043; --line: #4A4D51; --tx: #E8EAED; --mut: #A0A5AB; --dim: #80868B; --sh1: none; --sh2: none; color-scheme: dark; }
+:root[data-theme=gray] { --bg: #202124; --bg2: #292A2D; --card: #303134; --card2: #3C4043; --line: #4A4D51; --tx: #E8EAED; --mut: #A0A5AB; --dim: #80868B; --sh1: 0 8px 22px rgba(0,0,0,.35); --sh2: 0 6px 14px rgba(0,0,0,.35); color-scheme: dark; }
 :root[data-theme=amoled] { --bg: #000000; --bg2: #000000; --card: #1C1C1E; --card2: #2C2C2E; --line: #38383A; --tx: #FFFFFF; --mut: #98989F; --dim: #6C6C70; --sh1: none; --sh2: none; color-scheme: dark; }
 :root[data-theme=light] { color-scheme: light; }
 
@@ -669,3 +661,44 @@ span.crest b { font-weight: 900; padding-bottom: 3px; }
 .upd-scrim { background: color-mix(in srgb, var(--bg) 72%, transparent); }
 .upd-c { border: 1.5px solid transparent; background: linear-gradient(var(--bg2), var(--bg2)) padding-box, var(--grad, linear-gradient(90deg, var(--ac), var(--ac2))) border-box; }
 .upd-bar i { background: var(--grad, linear-gradient(90deg, var(--ac), var(--ac2))); }
+
+/* ===== Minijuego "Cabezones" — overlay premium IA (glass + glow cyan) ===== */
+.btn-arcade {
+  position: fixed; z-index: 35; right: 16px; bottom: calc(var(--navh) + 20px + var(--sab));
+  width: 52px; height: 52px; border-radius: 18px;
+  display: grid; place-items: center;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--act); box-shadow: 0 0 18px rgba(0,217,255,.25), var(--sh2);
+}
+[data-perf=full] .btn-arcade { -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8); backdrop-filter: blur(var(--glass-blur)) saturate(1.8); transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+[data-perf=full] .btn-arcade:active { transform: scale(.93); }
+.btn-arcade .ic { width: 24px; height: 24px; }
+
+#container-arcade {
+  position: fixed; inset: 0; z-index: 70;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: calc(14px + var(--sat)) 14px calc(14px + var(--sab));
+  background: rgba(2,2,3,.86);
+  opacity: 0;
+}
+[data-perf=full] #container-arcade { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: opacity .25s; }
+#container-arcade.on { opacity: 1; }
+
+.arc-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 640px; }
+.arc-score { font: 900 26px/1 var(--fd); letter-spacing: .03em; color: var(--tx); text-shadow: 0 0 14px rgba(0,217,255,.35); }
+.btn-volver {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 10px;
+  border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--tx); font-weight: 700; font-size: 13.5px;
+}
+[data-perf=full] .btn-volver { -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+[data-perf=full] .btn-volver:active { transform: scale(.95); }
+.btn-volver .ic { width: 18px; height: 18px; color: var(--live); }
+
+.arc-stage {
+  width: 100%; max-width: 640px; padding: 10px; border-radius: 24px;
+  background: #0B0B0C; border: 1px solid var(--glass-border);
+  box-shadow: 0 0 40px rgba(0,217,255,.14), var(--sh1);
+}
+#canvasFutbol { display: block; width: 100%; height: auto; border-radius: 16px; background: #0b0b0c; touch-action: none; }
+.arc-hint { color: var(--dim); font-size: 12.5px; text-align: center; }
