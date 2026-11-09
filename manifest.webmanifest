@@ -1,48 +1,24 @@
 {
-  "name": "La Súper Liga",
+  "name": "La Súper Liga 2027",
   "short_name": "LSL",
-  "description": "Calendario, tabla y partidos de La Súper Liga.",
+  "description": "Calendario, tabla, partidos, pronósticos y noticias de La Súper Liga.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0B0B0C",
-  "theme_color": "#0B0B0C",
-  "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "id": "./",
+  "orientation": "any",
+  "background_color": "#0D0E12",
+  "theme_color": "#0D0E12",
   "lang": "es",
-  "categories": [
-    "sports"
+  "categories": ["sports"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    {
-      "name": "Partidos",
-      "short_name": "Partidos",
-      "url": "./#/matches"
-    },
-    {
-      "name": "Tabla y copas",
-      "short_name": "Liga",
-      "url": "./#/league"
-    }
+    { "name": "Partidos", "url": "./#/matches" },
+    { "name": "Tabla", "url": "./#/standings" },
+    { "name": "Pronósticos", "url": "./#/predictions" }
   ]
 }

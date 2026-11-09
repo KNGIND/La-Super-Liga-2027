@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#09090B" />
+    <meta name="theme-color" content="#0D0E12" />
     <meta name="color-scheme" content="dark light" />
     <meta name="description" content="La Súper Liga 2027: partidos, tabla, copas, pronósticos y noticias." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -12,6 +12,22 @@
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <title>La Súper Liga 2027</title>
+    <!-- Tipografía Inter (opcional: si no carga, se usa la fuente del sistema). Para cambiarla: --font en src/styles/design-tokens.css -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <!-- Estilos (el orden importa). Los colores y tamaños se cambian en src/styles/design-tokens.css -->
+    <link rel="stylesheet" href="src/styles/design-tokens.css" />
+    <link rel="stylesheet" href="src/styles/themes.css" />
+    <link rel="stylesheet" href="src/styles/global.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/screens.css" />
+    <link rel="stylesheet" href="src/styles/responsive.css" />
+    <link rel="stylesheet" href="src/styles/animations.css" />
+  <link rel="stylesheet" href="src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="src/styles/editor.css" />
+    <link rel="stylesheet" href="src/styles/utilities.css" />
     <!-- Aplica el tema ANTES de pintar para que no haya destello blanco/negro. -->
     <script>
       (function () {
@@ -28,10 +44,10 @@
     </script>
     <style>
       /* Estilo mínimo de arranque (antes de que cargue el CSS real). */
-      html { background: #09090b; }
-      html[data-theme='light'] { background: #f4f4f5; }
+      html { background: #0d0e12; }
+      html[data-theme='light'] { background: #eef0f4; }
       #splash { position: fixed; inset: 0; display: grid; place-items: center; background: inherit; z-index: 100; }
-      #splash i { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #3f3f46; border-top-color: #3b82f6; animation: s 0.8s linear infinite; }
+      #splash i { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #38336a; border-top-color: #9b72f7; animation: s 0.8s linear infinite; }
       @keyframes s { to { transform: rotate(360deg); } }
     </style>
   </head>
@@ -40,6 +56,6 @@
     <div id="layers"></div>
     <div id="splash"><i></i></div>
     <noscript><p style="padding:24px;font-family:system-ui">La Súper Liga necesita JavaScript para funcionar.</p></noscript>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>
