@@ -1,221 +1,45 @@
 <!doctype html>
-<html lang="es" data-theme="dark" data-perf="full">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>La Super Liga</title>
-<meta name="description" content="Calendario, tabla y partidos de La Súper Liga.">
-<meta name="theme-color" content="#0B0B0C">
-<meta name="color-scheme" content="dark light">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-
-<!-- Evita el "parpadeo" de tema/rendimiento antes de que cargue el JS.
-     data-launch: "fresh" = abriste la app de cero (se muestra la bienvenida) · "resume" = volvés de segundo plano / recarga del navegador (se retoma donde estabas). -->
-<script>
-(function(){var d=document.documentElement;try{var p=JSON.parse(localStorage.getItem('lsl:prefs')||'{}');
-if(p.mode==='light'||p.mode==='dark'||p.mode==='gray'||p.mode==='amoled')d.setAttribute('data-theme',p.mode);
-var m=navigator.deviceMemory,c=navigator.hardwareConcurrency;
-d.setAttribute('data-perf',p.perf==='full'||p.perf==='lite'?p.perf:((m&&m<=4)||(c&&c<=4)?'lite':'full'));}catch(e){}
-var r=false;try{r=sessionStorage.getItem('lsl:alive')==='1'||document.wasDiscarded===true;sessionStorage.setItem('lsl:alive','1');}catch(e){}
-d.setAttribute('data-launch',r?'resume':'fresh');})();
-</script>
-
-<!-- ---------- Editor de código en vivo: consulta temprana ----------
-     Una sola consulta a Supabase (tabla lsl_code), antes de pedir CSS o JS.
-     Tiempo límite corto: si tarda o falla, sigue todo con los archivos de
-     este paquete, como si el editor de código no existiera.
-     El resultado queda en window.__LSL_CODE__ = { ok, preview, files:{ruta:{published,draft}} } -->
-<script src="js/config.js"></script>
-<script src="data/data.js"></script>
-<script>
-window.__LSL_CODE_READY__ = new Promise(function (resolve) {
-  var CFG = window.LSL_CONFIG || {};
-  var base = (CFG.supabaseUrl || '').replace(/\/+$/, ''), key = CFG.supabaseAnonKey || '';
-  var ALL = ['index.html', 'css/styles.css', 'css/admin.css', 'css/onboard.css', 'data/data.js', 'js/store.js', 'js/ui.js', 'js/app.js', 'js/admin.js', 'js/edit.js', 'js/onboard.js', 'js/config.js'];
-  var out = { ok: false, preview: false, files: {} };
-  if (!base || !key) { resolve(out); return; }
-  try { out.preview = sessionStorage.getItem('lsl:codepreview') === 'true' || localStorage.getItem('lsl:codepreview') === 'true'; } catch (e) { }
-  var done = false;
-  var timer = setTimeout(function () { if (!done) { done = true; resolve(out); } }, 2500);
-  fetch(base + '/rest/v1/lsl_code?select=path,published,draft&path=in.(' + ALL.map(encodeURIComponent).join(',') + ')&t=' + Date.now(), { headers: { apikey: key, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache, no-store, must-revalidate' }, cache: 'no-store' })
-    .then(function (r) { return r.ok ? r.json() : []; })
-    .then(function (rows) {
-      if (done) return; done = true; clearTimeout(timer);
-      (rows || []).forEach(function (row) { out.files[row.path] = row; });
-      out.ok = true; resolve(out);
-    })
-    .catch(function () { if (!done) { done = true; clearTimeout(timer); resolve(out); } });
-});
-</script>
-<!-- Una sola tipografía web (títulos y números). El texto usa la fuente del sistema: cero descarga. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap"></noscript>
-<link rel="stylesheet" href="css/styles.css">
-<script>
-/* Si hay un override PUBLICADO (o, para el admin en vista previa, un borrador)
-   de css/styles.css, lo agrega ENCIMA del original ni bien está listo — así la
-   cascada CSS hace que gane el override, y si tiene errores de sintaxis el
-   navegador simplemente ignora esas líneas sueltas (nunca rompe la página).
-   Lo mismo para data/data.js: como solo hace "window.LSL_DATA = {...}", volver
-   a correrlo acá simplemente reemplaza esa variable antes de que store.js la
-   lea más abajo — sin tocar el archivo original que ya se cargó arriba. */
-window.__LSL_CODE_READY__.then(function (data) {
-  window.__LSL_CODE__ = data;
-  var row = data.files['css/styles.css'];
-  var css = row && (data.preview && row.draft != null ? row.draft : row.published);
-  if (css) { var st = document.createElement('style'); st.id = 'lsl-code-override-css'; st.setAttribute('data-lsl-override', 'css/styles.css'); st.textContent = css; document.head.appendChild(st); }
-  var drow = data.files['data/data.js'];
-  var djs = drow && (data.preview && drow.draft != null ? drow.draft : drow.published);
-  if (djs) { try { var ds = document.createElement('script'); ds.setAttribute('data-lsl-override', 'data/data.js'); ds.text = djs; document.head.appendChild(ds); } catch (e) { } }
-});
-</script>
-</head>
-<body>
-<script src="js/island.js"></script>
-<script src="js/fx.js"></script>
-<!-- Íconos (un solo sprite, se reutiliza con <use>) -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
-<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.6 12 3l9 7.6V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
-<symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.6l3.9 2.8-1.5 4.6H9.6l-1.5-4.6z"/><path d="M12 7.6V3M15.9 10.4l4.4-1.6M14.4 15l2.7 3.6M9.6 15l-2.7 3.6M8.1 10.4L3.7 8.8"/></symbol>
-<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1v1a3 3 0 0 0 3 3h1M16 6h3a1 1 0 0 1 1 1v1a3 3 0 0 1-3 3h-1M12 14v4M8 20h8"/></symbol>
-<symbol id="i-news" viewBox="0 0 24 24"><rect x="4" y="4" width="13" height="16" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2M8 8h5M8 12h5M8 16h3"/></symbol>
-<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
-<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
-<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.6 7-11a7 7 0 0 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
-<symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M9 21h6M8 3l4 3 4-3"/></symbol>
-<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
-<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
-<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
-<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17.4l-5.4 2.9 1.1-6.1L3.2 9.9l6.1-.8z"/></symbol>
-<symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/></symbol>
-<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></symbol>
-<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 20h14"/></symbol>
-<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/></symbol>
-<symbol id="i-cursor" viewBox="0 0 24 24"><path d="M5 3l6.5 16 2.2-6.3L20 10.5z"/></symbol>
-<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></symbol>
-<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
-<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
-<symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M9 12h10"/></symbol>
-<symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
-<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
-<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 5.2a3.2 3.2 0 0 1 0 5.6M18.5 14.5A6 6 0 0 1 21 20"/></symbol>
-<symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></symbol>
-<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
-<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></symbol>
-<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21a2 2 0 0 0 4 0"/></symbol>
-<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.4"/></symbol>
-<symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11"/></symbol>
-<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4M12 17.6v.4"/></symbol>
-<symbol id="i-gallery" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/></symbol>
-</defs></svg>
-
-<!-- Bienvenida: se muestra CADA VEZ que se abre la app (no al volver de segundo plano) -->
-<div id="splash" aria-hidden="true">
-  <div class="sp-c">
-    <div class="sp-logo" id="sp-logo"><span class="mark">LSL</span></div>
-    <h1 class="sp-t" id="sp-name"></h1>
-    <p class="sp-h" id="sp-hi">Bienvenido</p>
-    <div class="sp-bar"><i></i></div>
-  </div>
-</div>
-
-<header class="top" id="top"></header>
-<div class="banner" id="banner" hidden></div>
-<div class="ann" id="ann" hidden></div>
-<main id="view" class="view" tabindex="-1"></main>
-<nav id="nav" data-nav="floating" aria-label="Navegación principal"></nav>
-
-<!-- Ventanita de detalle (partido / noticia) -->
-<div class="sheet" id="sheet" hidden>
-  <div class="scrim" data-close></div>
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
-    <div class="grab" id="grab"><i></i></div>
-    <button class="ib sx" data-close aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
-    <div class="sbody" id="sbody"></div>
-  </div>
-</div>
-
-<div class="dr" id="drawer" hidden></div>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div id="admin-root"></div>
-<div id="ob-root"></div>
-<div id="tour-root"></div>
-<div id="upd-root"></div>
-
-<noscript><p style="padding:24px;font-family:sans-serif">Necesitás activar JavaScript para ver La Súper Liga.</p></noscript>
-
-<script>
-/* ---------- Bootloader de JS del editor de código en vivo ----------
-   Reusa la consulta a Supabase que ya arrancó en el <head> (window.__LSL_CODE_READY__).
-   store.js/ui.js/app.js se cargan EN ORDEN estricto (uno después de que el
-   anterior terminó), igual que si tuvieran defer, porque dependen entre sí.
-   Si algo tarda o falla, sigue con los archivos originales de este paquete:
-   nunca se queda la página sin arrancar.
-
-   "Vigilante" anti-código-roto: antes de usar un override, marca en
-   sessionStorage que lo está por intentar. app.js, ni bien termina de armar
-   la pantalla principal, confirma "arrancó bien" y borra esa marca. Si el
-   código tenía un error y la página nunca llegó a confirmar, LA PRÓXIMA vez
-   que se abra (a los pocos segundos, porque el usuario reintenta, o en la
-   visita de otra persona) esa marca sigue puesta: significa que la vez
-   anterior no llegó a arrancar, así que esta vez se ignoran los overrides
-   por completo y se usan los archivos originales — la app nunca queda
-   rota para siempre, como mucho falla UNA carga. */
-(function () {
-  var FILES = ['js/store.js', 'js/ui.js', 'js/app.js'];
-  var anchor = document.currentScript;
-  var WATCHDOG_KEY = 'lsl:code_boot_pending';
-
-  function runInOrder(list) {
-    var i = 0;
-    function next() {
-      if (i >= list.length) return;
-      var item = list[i++]; var s = document.createElement('script');
-      s.setAttribute('data-lsl-src', item.path);
-      if (item.code) { s.setAttribute('data-lsl-override', item.kind); s.text = item.code; anchor.parentNode.insertBefore(s, anchor.nextSibling); next(); }
-      else { s.src = item.path; s.onload = next; s.onerror = next; anchor.parentNode.insertBefore(s, anchor.nextSibling); }
-    }
-    next();
-  }
-  function loadOriginal() { runInOrder(FILES.map(function (p) { return { path: p }; })); }
-
-  var wasPending = false;
-  try { wasPending = sessionStorage.getItem(WATCHDOG_KEY) === '1'; } catch (e) { }
-
-  if (!window.__LSL_CODE_READY__ || wasPending) {
-    // Si la carga anterior con overrides no llegó a confirmar que arrancó bien,
-    // esta vez directamente no se intenta de nuevo: van los archivos originales.
-    if (wasPending) {
-      try { sessionStorage.removeItem(WATCHDOG_KEY); localStorage.setItem('lsl:code_last_crash', JSON.stringify({ at: new Date().toISOString() })); } catch (e) { }
-    }
-    loadOriginal(); return;
-  }
-
-  var settled = false;
-  var timer = setTimeout(function () { if (!settled) { settled = true; loadOriginal(); } }, 2500);
-  window.__LSL_CODE_READY__.then(function (data) {
-    if (settled) return; settled = true; clearTimeout(timer);
-    window.__LSL_CODE__ = data;
-    var anyOverride = FILES.some(function (p) { var r = data.files[p]; return r && (r.published != null || (data.preview && r.draft != null)); });
-    if (anyOverride) { try { sessionStorage.setItem(WATCHDOG_KEY, '1'); } catch (e) { } }
-    runInOrder(FILES.map(function (p) {
-      var row = data.files[p];
-      var useDraft = data.preview && row && row.draft != null;
-      var code = row && (useDraft ? row.draft : row.published);
-      return code ? { path: p, code: code, kind: useDraft ? 'draft' : 'published' } : { path: p };
-    }));
-  }, loadOriginal);
-})();
-</script>
-</body>
+<html lang="es" data-theme="dark" data-perf="balanced">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090B" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="La Súper Liga 2027: partidos, tabla, copas, pronósticos y noticias." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <title>La Súper Liga 2027</title>
+    <!-- Aplica el tema ANTES de pintar para que no haya destello blanco/negro. -->
+    <script>
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem('lsl27:prefs') || '{}');
+          var t = p.theme || 'dark';
+          if (t === 'system') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          document.documentElement.dataset.theme = t;
+          var m = navigator.deviceMemory || 4, c = navigator.hardwareConcurrency || 4;
+          var perf = p.perf && p.perf !== 'auto' ? p.perf : m <= 2 || c <= 4 ? 'eco' : m >= 6 && c >= 8 ? 'ultra' : 'balanced';
+          document.documentElement.dataset.perf = perf;
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      /* Estilo mínimo de arranque (antes de que cargue el CSS real). */
+      html { background: #09090b; }
+      html[data-theme='light'] { background: #f4f4f5; }
+      #splash { position: fixed; inset: 0; display: grid; place-items: center; background: inherit; z-index: 100; }
+      #splash i { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #3f3f46; border-top-color: #3b82f6; animation: s 0.8s linear infinite; }
+      @keyframes s { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="layers"></div>
+    <div id="splash"><i></i></div>
+    <noscript><p style="padding:24px;font-family:system-ui">La Súper Liga necesita JavaScript para funcionar.</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

@@ -1,0 +1,21 @@
+{
+  "name": "la-super-liga-2027",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "La Súper Liga 2027 · PWA en Vanilla TypeScript",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "seed": "node scripts/convert-legacy.mjs"
+  },
+  "dependencies": {
+    "@rive-app/canvas-lite": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0"
+  }
+}
