@@ -106,6 +106,13 @@ jobs:
           mv "$RUNNER_TEMP_JKS" "$B/android/release.jks"
           cat >> "$B/android/app/build.gradle" <<GRADLE
 
+          // Evita el choque de librerías de Kotlin (kotlin-stdlib-jdk7/jdk8 1.6.21 vs kotlin-stdlib 1.8.22):
+          // desde Kotlin 1.8 esos módulos ya vienen dentro de kotlin-stdlib, así que excluirlos es seguro.
+          configurations.all {
+              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+          }
+
           android {
               defaultConfig {
                   versionCode ${{ github.run_number }} + 1000
