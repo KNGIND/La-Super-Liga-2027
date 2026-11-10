@@ -1,6 +1,0 @@
-{
-  "appId": "com.lasuperliga.app",
-  "appName": "La Súper Liga",
-  "webDir": "www",
-  "server": { "androidScheme": "https" }
-}
