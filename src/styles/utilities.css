@@ -1,0 +1,13 @@
+/* Utilidades chicas. Si repetís mucho un estilo, creá un componente en components.css en vez de abusar de esto. */
+.muted { color: var(--text-2); }
+.faint { color: var(--text-3); }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: var(--sp-2); }
+.row--between { justify-content: space-between; }
+.row--wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.mt-2 { margin-top: var(--sp-2); } .mt-3 { margin-top: var(--sp-3); } .mt-4 { margin-top: var(--sp-4); } .mt-6 { margin-top: var(--sp-6); }
+.mb-3 { margin-bottom: var(--sp-3); } .mb-4 { margin-bottom: var(--sp-4); }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pre { white-space: pre-line; }

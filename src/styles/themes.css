@@ -1,0 +1,52 @@
+/* ============================================================
+   TEMAS · el tema oscuro vive en design-tokens.css (:root).
+   Acá está el CLARO completo: mismos nombres de variable, valores de modo claro.
+   Se activa con <html data-theme="light"> (lo pone core/prefs.ts).
+   ============================================================ */
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #eef0f4;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f4f6fa;
+  --border: #e2e5ec;
+  --border-strong: #cfd4de;
+
+  --text: #0f1218;
+  --text-2: #565d6e;
+  --text-3: #8a91a1;
+
+  --accent: #2f5fef;
+  --accent-strong: #2149d6;
+  --accent-soft: rgba(47, 95, 239, 0.1);
+  --on-accent: #ffffff;
+
+  --grad: var(--accent-strong);
+  --grad-hero: var(--card);
+  --grad-card: none;
+  --bg-glow: none;
+
+  --live: #e5243b;
+  --live-soft: rgba(229, 36, 59, 0.1);
+  --success: #12a05a;
+  --success-soft: rgba(18, 160, 90, 0.12);
+  --warning: #c77a0a;
+  --warning-soft: rgba(199, 122, 10, 0.12);
+  --danger: #e5243b;
+  --gold: #c99a06;
+
+  --glass: rgba(255, 255, 255, 0.88);
+  --scrim: rgba(15, 18, 24, 0.45);
+  --pitch-1: #4ade80;
+  --pitch-2: #22c55e;
+  --pitch-line: rgba(255, 255, 255, 0.7);
+
+  --shadow-card: 0 1px 2px rgba(15, 18, 24, 0.05);
+  --shadow-float: 0 12px 30px rgba(15, 18, 24, 0.18);
+  --shadow-glow: none;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

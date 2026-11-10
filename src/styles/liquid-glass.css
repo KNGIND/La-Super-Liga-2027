@@ -1,0 +1,134 @@
+/* LIQUID GLASS (perfil ULTRA) — vidrio líquido estilo iOS: superficies translúcidas con desenfoque,
+   brillo en el borde superior, reflejo suave y botones circulares grandes.
+   TODO está acotado a html[data-perf='ultra'], así que en ECO y BALANCED este archivo no hace nada.
+
+   Cómo ajustarlo:
+   · Más/menos transparencia  → --lg-fill
+   · Más/menos desenfoque     → --lg-blur
+   · Brillo del borde         → --lg-spec
+   · Costo: el desenfoque es lo más caro. Si va lento en un celular, bajá --lg-blur o usá BALANCED. */
+
+html[data-perf='ultra'] {
+  --lg-blur: 18px;
+  --lg-fill: rgba(255, 255, 255, 0.085);
+  --lg-fill-strong: rgba(255, 255, 255, 0.14);
+  --lg-stroke: rgba(255, 255, 255, 0.2);
+  --lg-spec: rgba(255, 255, 255, 0.5);
+  --lg-shine: radial-gradient(120% 110% at 14% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 52%);
+  --lg-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --lg-edge: inset 0 1.5px 0 var(--lg-spec), inset 0 -1px 0 rgba(255, 255, 255, 0.07), inset 1px 0 0 rgba(255, 255, 255, 0.1), inset -1px 0 0 rgba(255, 255, 255, 0.05);
+  --lg-filter: blur(var(--lg-blur)) saturate(190%) brightness(1.06);
+  --dock-h: 82px;
+  --appbar-h: 62px;
+}
+html[data-perf='ultra'][data-theme='light'] {
+  --lg-fill: rgba(255, 255, 255, 0.58);
+  --lg-fill-strong: rgba(255, 255, 255, 0.78);
+  --lg-stroke: rgba(255, 255, 255, 0.9);
+  --lg-spec: rgba(255, 255, 255, 1);
+  --lg-shine: radial-gradient(120% 110% at 14% 0%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 55%);
+  --lg-shadow: 0 10px 26px rgba(40, 56, 110, 0.16), 0 1px 3px rgba(40, 56, 110, 0.12);
+  --lg-edge: inset 0 1.5px 0 var(--lg-spec), inset 0 -1px 0 rgba(255, 255, 255, 0.5), inset 1px 0 0 rgba(255, 255, 255, 0.6), inset -1px 0 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Fondo de color detrás del vidrio (estático: no cuesta batería). Sin esto el vidrio no tiene qué "refractar". */
+html[data-perf='ultra'] body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(60% 38% at 12% 6%, rgba(79, 124, 255, 0.38), transparent 70%),
+    radial-gradient(52% 36% at 96% 24%, rgba(168, 85, 247, 0.22), transparent 70%),
+    radial-gradient(70% 40% at 30% 102%, rgba(34, 211, 238, 0.2), transparent 70%);
+}
+html[data-perf='ultra'][data-theme='light'] body::before {
+  background:
+    radial-gradient(60% 38% at 12% 6%, rgba(79, 124, 255, 0.28), transparent 70%),
+    radial-gradient(52% 36% at 96% 24%, rgba(168, 85, 247, 0.16), transparent 70%),
+    radial-gradient(70% 40% at 30% 102%, rgba(34, 211, 238, 0.2), transparent 70%);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  /* ---------- material de vidrio ---------- */
+  html[data-perf='ultra'] .icon-btn,
+  html[data-perf='ultra'] .appbar .avatar,
+  html[data-perf='ultra'] .btn:not(.btn--primary):not(.btn--danger):not(.btn--ghost),
+  html[data-perf='ultra'] .seg--chips .seg__btn,
+  html[data-perf='ultra'] .seg--full .seg__btn,
+  html[data-perf='ultra'] .adm-back,
+  html[data-perf='ultra'] .chip:not(.chip--accent),
+  html[data-perf='ultra'] .dock__inner,
+  html[data-perf='ultra'] .toast,
+  html[data-perf='ultra'] .rail,
+  html[data-perf='ultra'] .card:not(.adm-row),
+  html[data-perf='ultra'] .adm-mod,
+  html[data-perf='ultra'] .welcome__avatar i {
+    background: var(--lg-shine), var(--lg-fill);
+    border: 1px solid var(--lg-stroke);
+    box-shadow: var(--lg-edge), var(--lg-shadow);
+    -webkit-backdrop-filter: var(--lg-filter);
+    backdrop-filter: var(--lg-filter);
+  }
+  /* Tarjetas y listas: vidrio más suave y de menor desenfoque (hay muchas en pantalla) */
+  html[data-perf='ultra'] .card:not(.adm-row),
+  html[data-perf='ultra'] .adm-mod {
+    background: var(--lg-fill);
+    box-shadow: var(--lg-edge), 0 6px 18px rgba(0, 0, 0, 0.16);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+  }
+  html[data-perf='ultra'][data-theme='light'] .card:not(.adm-row), html[data-perf='ultra'][data-theme='light'] .adm-mod { box-shadow: var(--lg-edge), 0 6px 18px rgba(40, 56, 110, 0.08); }
+  html[data-perf='ultra'] .mgroup__head, html[data-perf='ultra'] .mc--row, html[data-perf='ultra'] .mc__st { border-color: var(--lg-stroke); }
+  html[data-perf='ultra'] .mc--row:hover, html[data-perf='ultra'] .mc--row:active { background: var(--lg-fill-strong); }
+
+  /* Botón principal: vidrio teñido de azul con brillo */
+  html[data-perf='ultra'] .btn--primary,
+  html[data-perf='ultra'] .seg--chips .seg__btn.is-on,
+  html[data-perf='ultra'] .seg--full .seg__btn.is-on,
+  html[data-perf='ultra'] .day.is-on {
+    background: var(--lg-shine), var(--accent);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: var(--lg-edge), 0 8px 22px -6px var(--accent);
+    color: #fff;
+  }
+  html[data-perf='ultra'] .adm-mod.is-on { background: var(--lg-shine), var(--accent-soft); border-color: var(--accent); }
+
+  /* ---------- encabezado: transparente, solo los botones son de vidrio ---------- */
+  html[data-perf='ultra'] .appbar {
+    background: linear-gradient(to bottom, var(--bg) 35%, transparent);
+    border-bottom: 0;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    padding-top: calc(var(--safe-t) + 4px);
+  }
+  html[data-perf='ultra'] .appbar .icon-btn,
+  html[data-perf='ultra'] .appbar .avatar { width: 44px; height: 44px; }
+  html[data-perf='ultra'] .appbar .avatar { margin-left: 2px; color: #fff; background: var(--lg-shine), var(--accent); }
+  html[data-perf='ultra'] .appbar__side--end { gap: 8px; }
+  /* Flecha de volver: grande y separada, en su círculo de vidrio */
+  html[data-perf='ultra'] .appbar [data-act='back'] { width: 52px; height: 52px; margin-left: 4px; }
+  html[data-perf='ultra'] .appbar [data-act='back'] svg { width: 26px; height: 26px; }
+
+  /* ---------- barra inferior: píldora flotante de vidrio ---------- */
+  html[data-perf='ultra'] .dock { left: 0; right: 0; bottom: 0; padding: 0 16px calc(var(--safe-b) + 12px); background: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none; }
+  html[data-perf='ultra'] .dock__inner { pointer-events: auto; height: 64px; max-width: 440px; padding: 5px; border-radius: 34px; gap: 2px; }
+  html[data-perf='ultra'] .dock__item { border-radius: 28px; gap: 2px; transition: background var(--dur) var(--ease), color var(--dur-fast), transform var(--dur) var(--ease-spring, var(--ease)); }
+  html[data-perf='ultra'] .dock__item::before { display: none; }
+  html[data-perf='ultra'] .dock__item.is-active { background: var(--lg-fill-strong); box-shadow: inset 0 1px 0 var(--lg-spec), inset 0 0 0 1px var(--lg-stroke), 0 4px 14px rgba(0, 0, 0, 0.18); color: var(--accent); }
+  html[data-perf='ultra'] .dock__item:active { transform: scale(0.92); }
+
+  /* ---------- paneles ---------- */
+  html[data-perf='ultra'] .drawer__panel, html[data-perf='ultra'] .modal__panel { background: var(--lg-shine), var(--glass); border: 1px solid var(--lg-stroke); box-shadow: var(--lg-edge), var(--shadow-float); }
+  html[data-perf='ultra'] .toast { color: var(--text); }
+
+  /* ---------- feedback al tocar: resorte ---------- */
+  html[data-perf='ultra'] .icon-btn:active,
+  html[data-perf='ultra'] .btn:active,
+  html[data-perf='ultra'] .seg__btn:active { transform: scale(0.94); transition: transform 120ms var(--ease); }
+}
+
+/* Celulares angostos: botones del encabezado un poco más chicos para que entre el nombre de la liga */
+@media (max-width: 430px) {
+  html[data-perf='ultra'] .appbar { padding-left: 10px; padding-right: 10px; }
+  html[data-perf='ultra'] .appbar .icon-btn, html[data-perf='ultra'] .appbar .avatar { width: 38px; height: 38px; }
+  html[data-perf='ultra'] .appbar__side--end { gap: 5px; }
+  html[data-perf='ultra'] .appbar .brand__mark { display: none; }
+  html[data-perf='ultra'] .appbar [data-act='back'] { width: 48px; height: 48px; }
+}

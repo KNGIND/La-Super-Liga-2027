@@ -1,0 +1,67 @@
+/* ADAPTACIÓN A DISPOSITIVOS
+   <  600px  celular            → barra inferior fija, 1 columna
+   >= 600px  celular grande     → listas en 2 columnas
+   >= 840px  tablet / notebook  → barra LATERAL (reemplaza la inferior), grillas
+   >= 1200px PC                 → barra lateral ancha con etiquetas, 3 columnas
+   >= 1600px monitor grande/TV  → texto más grande, foco bien visible, navegación con flechas */
+
+/* Rejillas utilitarias (se adaptan solas al ancho del contenedor) */
+.grid { display: grid; gap: var(--sp-3); grid-template-columns: 1fr; }
+.grid > * { min-width: 0; }
+@container (min-width: 560px) { .grid--auto { grid-template-columns: repeat(2, 1fr); } }
+.view { container-type: inline-size; }
+
+@media (min-width: 600px) {
+  :root { --gutter: 24px; }
+  .grid--2, .grid--3 { grid-template-columns: repeat(2, 1fr); }
+  .mlist { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .modal__panel { left: 50%; right: auto; bottom: auto; top: 50%; width: min(560px, 92vw); border-radius: var(--r-xl); border-bottom: 1px solid var(--border); transform: translate(-50%, -46%) scale(0.97); opacity: 0; transition: transform var(--dur) var(--ease), opacity var(--dur); }
+  .layer.is-open .modal__panel { transform: translate(-50%, -50%); opacity: 1; }
+  .modal__panel--wide { width: min(760px, 94vw); }
+}
+
+@media (min-width: 840px) {
+  :root { --rail-w: 92px; --gutter: 28px; }
+  #app { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-areas: 'rail bar' 'rail view'; grid-template-rows: auto 1fr; }
+  .appbar { grid-area: bar; }
+  .pager { grid-area: view; }
+  .view { padding-bottom: 48px; width: 100%; }
+  .dock { display: none; }
+  .rail { grid-area: rail; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100dvh; padding: calc(var(--safe-t) + 12px) 10px 12px; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); }
+  .rail__item { flex-direction: column; gap: 3px; padding: 9px 4px; font-size: 11px; text-align: center; }
+  .rail__item--minor .rail__item__label { font-size: 10px; }
+  html[data-immersive='1'] .rail { display: flex; }
+  .grid--3 { grid-template-columns: repeat(2, 1fr); }
+  .toast { bottom: 32px; }
+  .carousel > * { flex-basis: 320px; }
+}
+
+@media (min-width: 1200px) {
+  :root { --rail-w: 232px; --content-max: 1240px; }
+  .rail__item { flex-direction: row; gap: 12px; padding: 10px 14px; font-size: var(--fs-md); text-align: left; }
+  .rail__item--minor { font-size: var(--fs-sm); }
+  .rail__item--minor .rail__item__label { font-size: inherit; }
+  .grid--3 { grid-template-columns: repeat(3, 1fr); }
+  .two-col { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--sp-6); align-items: start; }
+}
+
+@media (min-width: 1600px) {
+  html { font-size: 118%; }
+  :root { --content-max: 1500px; --rail-w: 270px; }
+  :focus-visible { outline-width: 4px; outline-offset: 3px; }
+  a.card:focus-visible, .btn:focus-visible, .rail__item:focus-visible { transform: scale(1.03); }
+}
+
+/* Celulares muy angostos */
+@media (max-width: 360px) {
+  .mc__score { min-width: 64px; font-size: 1.25rem; }
+  .dock__item { font-size: 9.5px; }
+  .md-score { font-size: 2.1rem; }
+}
+
+/* Teléfono apaisado: la barra inferior ocupa poco */
+@media (max-height: 460px) and (orientation: landscape) {
+  :root { --dock-h: 52px; }
+  .dock__item__label { display: none; }
+}

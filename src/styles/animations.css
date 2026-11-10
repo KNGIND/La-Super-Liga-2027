@@ -1,0 +1,64 @@
+/* ANIMACIONES Y PERFILES DE RENDIMIENTO
+   <html data-perf="eco|balanced|ultra"> lo pone core/prefs.ts.
+   Regla de oro: solo se animan transform y opacity. El desenfoque (backdrop-filter) es lo más caro:
+   solo existe en BALANCED y ULTRA, y solo en barras y fondos de capas. */
+
+/* Entrada de pantalla */
+.view.view--in { animation: view-in var(--dur) var(--ease) both; }
+@keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- ECO: celulares de gama baja ---------- */
+html[data-perf='eco'] {
+  --blur: 0px; --use-shadow: 0;
+  --dur-fast: 0ms; --dur: 80ms; --dur-slow: 140ms;
+  --shadow-float: none; --shadow-glow: none;
+}
+html[data-perf='eco'] body::before { display: none; }
+html[data-perf='eco'] .appbar, html[data-perf='eco'] .dock { background: var(--surface); }
+html[data-perf='eco'] .view.view--in { animation: none; }
+html[data-perf='eco'] .sk::after { animation: none; }
+html[data-perf='eco'] .badge--live i { animation: none; }
+html[data-perf='eco'] .md-hero { background: var(--card); }
+
+/* ---------- BALANCED: desenfoque solo en barras ---------- */
+html[data-perf='balanced'] { --blur: 12px; }
+html[data-perf='balanced'] .appbar,
+html[data-perf='balanced'] .dock {
+  -webkit-backdrop-filter: saturate(1.4) blur(var(--blur));
+  backdrop-filter: saturate(1.4) blur(var(--blur));
+}
+
+/* ---------- ULTRA: efectos avanzados ---------- */
+html[data-perf='ultra'] { --blur: 24px; --dur: 280ms; --dur-slow: 460ms; }
+html[data-perf='ultra'] .appbar,
+html[data-perf='ultra'] .dock,
+html[data-perf='ultra'] .drawer__panel,
+html[data-perf='ultra'] .modal__panel {
+  -webkit-backdrop-filter: saturate(1.6) blur(var(--blur));
+  backdrop-filter: saturate(1.6) blur(var(--blur));
+}
+html[data-perf='ultra'] .drawer__panel, html[data-perf='ultra'] .modal__panel { background: var(--glass); }
+html[data-perf='ultra'] .layer__backdrop { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+html[data-perf='ultra'] .mc--large.mc--live { box-shadow: 0 8px 28px -12px var(--live); }
+.rive-slot { display: none; }
+html[data-perf='ultra'] .rive-slot:not(:empty) { display: block; width: 100%; max-width: 220px; aspect-ratio: 1; margin: 0 auto; }
+
+/* ---------- Movimiento reducido del sistema: respeta SIEMPRE ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- Cambio de pestaña: deslizado entre pantallas ---------- */
+.view { touch-action: pan-y pinch-zoom; }
+/* Copia de la pantalla vecina que se ve mientras arrastrás el dedo (ver core/navigation.js) */
+/* pantalla vecina mientras se arrastra: su aviso y su contenido forman una pieza independiente */
+.peek { position: fixed; z-index: 2; bottom: 0; overflow: hidden; background: var(--bg); pointer-events: none; will-change: transform; }
+.peek .view { min-height: 0; }
+html.is-swiping .pager { will-change: transform; }
+/* Al tocar una pestaña de la barra: la pantalla entra desde el lado que corresponde */
+.view.view--in[data-dir='1'] { animation: slide-from-right var(--dur-slow) var(--ease) both; }
+.view.view--in[data-dir='-1'] { animation: slide-from-left var(--dur-slow) var(--ease) both; }
+@keyframes slide-from-right { from { opacity: 0; transform: translate3d(32px, 0, 0); } }
+@keyframes slide-from-left { from { opacity: 0; transform: translate3d(-32px, 0, 0); } }
+html[data-perf='eco'] .view.view--in[data-dir] { animation: none; }
+@media (prefers-reduced-motion: reduce) { .view.view--in[data-dir] { animation: none; } }
