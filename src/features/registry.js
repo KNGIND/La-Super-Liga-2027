@@ -1,0 +1,20 @@
+export const FEATURES = [
+    { id: 'home', path: '/', title: 'Inicio', icon: 'home', load: () => import('./home/index.js') },
+    { id: 'matches', path: '/matches', title: 'Partidos', icon: 'calendar', load: () => import('./matches/index.js') },
+    { id: 'match', path: '/match/:id', title: 'Partido', icon: 'calendar', immersive: true, load: () => import('./matches/detail.js') },
+    { id: 'standings', path: '/standings', title: 'Tabla', icon: 'list', load: () => import('./standings/index.js') },
+    { id: 'tournaments', path: '/tournaments', title: 'Copas y torneos', icon: 'trophy', load: () => import('./tournaments/index.js') },
+    { id: 'teams', path: '/teams', title: 'Equipos', icon: 'shield', load: () => import('./teams/index.js') },
+    { id: 'team', path: '/team/:id', title: 'Equipo', icon: 'shield', load: () => import('./teams/detail.js') },
+    { id: 'players', path: '/players', title: 'Jugadores', icon: 'users', load: () => import('./players/index.js') },
+    { id: 'squads', path: '/squads', title: 'Planteles', icon: 'clipboard', load: () => import('./squads/index.js') },
+    { id: 'news', path: '/news', title: 'Noticias', icon: 'newspaper', load: () => import('./news/index.js') },
+    { id: 'article', path: '/news/:id', title: 'Noticia', icon: 'newspaper', immersive: true, load: () => import('./news/detail.js') },
+    { id: 'predictions', path: '/predictions', title: 'Pronósticos', icon: 'target', load: () => import('./predictions/index.js') },
+    { id: 'profile', path: '/profile', title: 'Perfil', icon: 'user', load: () => import('./profile/index.js') },
+    { id: 'search', path: '/search', title: 'Búsqueda', icon: 'search', load: () => import('./search/index.js') },
+    { id: 'notifications', path: '/notifications', title: 'Notificaciones', icon: 'bell', load: () => import('./notifications/index.js') },
+    { id: 'about', path: '/about', title: 'La liga', icon: 'info', load: () => import('./about/index.js') },
+    { id: 'admin', path: '/admin', title: 'Administración', icon: 'database', adminOnly: true, load: () => import('./admin/index.js') },
+];
+export const featureById = (id) => FEATURES.find((f) => f.id === id);
