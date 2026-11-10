@@ -8,15 +8,18 @@ function open() {
     if (dbp)
         return dbp;
     dbp = new Promise((resolve) => {
+        // Límite de tiempo: en algunos WebView indexedDB.open nunca responde y la app quedaba colgada.
+        const t = setTimeout(() => resolve(null), 1500);
+        const done = (v) => { clearTimeout(t); resolve(v); };
         try {
             const req = indexedDB.open(DB_NAME, 1);
             req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve(null);
-            req.onblocked = () => resolve(null);
+            req.onsuccess = () => done(req.result);
+            req.onerror = () => done(null);
+            req.onblocked = () => done(null);
         }
         catch {
-            resolve(null);
+            done(null);
         }
     });
     return dbp;
@@ -26,9 +29,11 @@ function tx(mode, run) {
         if (!db)
             return resolve(undefined);
         try {
-            const r = run(db.transaction(STORE, mode).objectStore(STORE));
+            const tr = db.transaction(STORE, mode);
+            const r = run(tr.objectStore(STORE));
             r.onsuccess = () => resolve(r.result);
             r.onerror = () => resolve(undefined);
+            tr.onabort = () => resolve(undefined);
         }
         catch {
             resolve(undefined);
