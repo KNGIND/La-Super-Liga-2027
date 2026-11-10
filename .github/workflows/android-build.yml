@@ -1,35 +1,29 @@
-name: Build Android APK (La Súper Liga)
+# APK de Android (Capacitor) para La Súper Liga 2027.
+# Empaqueta la app COMPLETA del repo (index.html, src/, icons/…) dentro del APK.
+# Secretos necesarios (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_PART_1 … ANDROID_KEYSTORE_PART_8  (el release.jks en base64 partido en 8 partes)
+#   ANDROID_KEYSTORE_PASSWORD  (contraseña del almacén)
+#   ANDROID_KEY_PASSWORD       (opcional; si no existe se usa la del almacén)
+name: Build Android APK
 
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
     paths:
+      - 'src/**'
       - 'index.html'
       - 'manifest.webmanifest'
       - 'sw.js'
-      - 'src/**'
       - 'icons/**'
-      - 'images/**'
-      - 'rive/**'
-      - 'capacitor.config.json'
-      - 'package.json'
+      - 'assets/**'
       - '.github/workflows/android-build.yml'
-
-permissions:
-  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Descargar repositorio
-        uses: actions/checkout@v4
-
-      - name: Preparar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - uses: actions/checkout@v4
 
       - name: Preparar JDK 21
         uses: actions/setup-java@v4
@@ -37,35 +31,12 @@ jobs:
           java-version: '21'
           distribution: 'zulu'
 
-      - name: Instalar dependencias de Capacitor
-        run: npm install
+      - name: Preparar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Preparar recursos web locales
-        run: |
-          rm -rf www
-          mkdir -p www
-          cp index.html manifest.webmanifest sw.js www/
-          cp -r src icons images rive www/ 2>/dev/null || true
-
-      - name: Crear proyecto Android de Capacitor
-        run: |
-          npx cap add android
-          npx cap sync android
-
-      - name: Poner el ícono de la liga
-        run: |
-          if [ -f icons/icon-512.png ]; then
-            for size in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-              mkdir -p "android/app/src/main/res/mipmap-$size"
-              cp icons/icon-512.png "android/app/src/main/res/mipmap-$size/ic_launcher.png"
-              cp icons/icon-512.png "android/app/src/main/res/mipmap-$size/ic_launcher_round.png"
-            done
-            rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          else
-            echo "::warning::No se encontró icons/icon-512.png; se conserva el ícono predeterminado."
-          fi
-
-      - name: Verificar y reconstruir la firma Android
+      - name: Reconstruir y verificar la firma
         env:
           P1: ${{ secrets.ANDROID_KEYSTORE_PART_1 }}
           P2: ${{ secrets.ANDROID_KEYSTORE_PART_2 }}
@@ -77,29 +48,68 @@ jobs:
           P8: ${{ secrets.ANDROID_KEYSTORE_PART_8 }}
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          KS_B64="${P1}${P2}${P3}${P4}${P5}${P6}${P7}${P8}"
+          KS_B64="$P1$P2$P3$P4$P5$P6$P7$P8"
           if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
-            echo "::error::Faltan los secretos del keystore Android."
+            echo "::error::Faltan secretos: ANDROID_KEYSTORE_PART_1 (y siguientes) o ANDROID_KEYSTORE_PASSWORD"
             exit 1
           fi
-          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > release.jks
-          keytool -list -keystore release.jks -storepass "$KS_PASS" | grep -q "PrivateKeyEntry" || {
-            echo "::error::El keystore no contiene una clave privada válida."
+          # El archivo se crea FUERA del repo (no se sube a GitHub)
+          printf '%s' "$KS_B64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/release.jks"
+          keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$KS_PASS" | grep -i "PrivateKeyEntry" || {
+            echo "::error::La clave no tiene ninguna entrada de clave privada. Revisá que las partes estén completas y en orden."
             exit 1
           }
-          ALIAS_REAL="$(keytool -list -keystore release.jks -storepass "$KS_PASS" | grep -m1 'PrivateKeyEntry' | cut -d, -f1 | tr -d ' ')"
+          ALIAS_REAL=$(keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$KS_PASS" | grep -m1 "PrivateKeyEntry" | cut -d, -f1 | tr -d ' ')
+          echo "Alias detectado: $ALIAS_REAL"
           echo "KEY_ALIAS_REAL=$ALIAS_REAL" >> "$GITHUB_ENV"
-          mv release.jks android/release.jks
+          echo "RUNNER_TEMP_JKS=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "Firma OK"
+
+      - name: Copiar la app a la carpeta de Capacitor
+        run: |
+          B="$RUNNER_TEMP/capbuild"
+          rm -rf "$B"; mkdir -p "$B/www"
+          cp index.html manifest.webmanifest "$B/www/"
+          cp -r src icons "$B/www/"
+          [ -f sw.js ] && cp sw.js "$B/www/"
+          [ -d assets ] && cp -r assets "$B/www/" || true
+          cd "$B"
+          cat > capacitor.config.json <<'JSON'
+          {
+            "appId": "com.lasuperliga.app",
+            "appName": "La Super Liga",
+            "webDir": "www"
+          }
+          JSON
+          npm init -y > /dev/null
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/app
+          npx cap add android
+
+      - name: Poner el ícono de la liga
+        run: |
+          B="$RUNNER_TEMP/capbuild"
+          if [ -f icons/icon-512.png ]; then
+            for size in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+              mkdir -p "$B/android/app/src/main/res/mipmap-$size"
+              cp icons/icon-512.png "$B/android/app/src/main/res/mipmap-$size/ic_launcher.png"
+              cp icons/icon-512.png "$B/android/app/src/main/res/mipmap-$size/ic_launcher_round.png"
+              cp icons/icon-512.png "$B/android/app/src/main/res/mipmap-$size/ic_launcher_foreground.png"
+            done
+            rm -rf "$B/android/app/src/main/res/mipmap-anydpi-v26"
+          else
+            echo "::warning::No se encontró icons/icon-512.png; queda el ícono por defecto"
+          fi
 
       - name: Configurar firma y versión
         run: |
-          cat >> android/app/build.gradle <<'GRADLE'
+          B="$RUNNER_TEMP/capbuild"
+          mv "$RUNNER_TEMP_JKS" "$B/android/release.jks"
+          cat >> "$B/android/app/build.gradle" <<GRADLE
 
-          def ciBuildNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
           android {
               defaultConfig {
-                  versionCode 1000 + ciBuildNumber
-                  versionName "3.1.${ciBuildNumber}"
+                  versionCode ${{ github.run_number }} + 1000
+                  versionName "2027.4.${{ github.run_number }}"
               }
               signingConfigs {
                   release {
@@ -116,21 +126,24 @@ jobs:
               }
           }
           GRADLE
+          cd "$B" && npx cap sync android
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
       - name: Compilar APK firmado
-        working-directory: android
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
+        working-directory: ${{ runner.temp }}/capbuild/android
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
-      - name: Publicar APK como Artifact
-        uses: actions/upload-artifact@v4
+      - name: Subir el APK
+        run: |
+          mkdir -p apk-out
+          cp "$RUNNER_TEMP/capbuild/android/app/build/outputs/apk/release/app-release.apk" apk-out/SuperLiga-2027.apk
+      - uses: actions/upload-artifact@v4
         with:
-          name: La-Super-Liga-APK-${{ github.run_number }}
-          path: android/app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: error
-          retention-days: 14
-        
+          name: SuperLiga-APK-${{ github.run_number }}
+          path: apk-out/SuperLiga-2027.apk
