@@ -84,14 +84,21 @@ function renderBanner() {
     b.hidden = !html;
     b.innerHTML = html;
 }
+/* Espera un paso del arranque como máximo `ms`. Si falla o tarda, sigue igual: el arranque nunca queda colgado. */
+function step(p, ms, name) {
+    const limit = new Promise((resolve) => setTimeout(() => { console.warn('[boot] tardó demasiado:', name); resolve(); }, ms));
+    return Promise.race([Promise.resolve(p).catch((e) => console.error('[boot]', name, e)), limit]);
+}
 export async function boot() {
+    // Red de seguridad: pase lo que pase, a los 6 s se quita la pantalla de carga.
+    setTimeout(() => document.getElementById('splash')?.remove(), 6000);
     applyPrefs();
     const root = document.getElementById('app');
     root.innerHTML = shellHtml();
     // 1) Datos instantáneos (caché o ejemplo), 2) pantalla, 3) el resto en segundo plano
-    await initData();
-    await initUser();
-    await initMods();
+    await step(initData(), 2500, 'datos');
+    await step(initUser(), 1500, 'usuario');
+    await step(initMods(), 2000, 'personalizaciones');
     renderChrome();
     renderBanner();
     startRouter();
