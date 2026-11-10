@@ -9,7 +9,7 @@ export const APP = {
     /** Texto corto (ej.: logo en pantallas angostas). */
     shortName: 'LSL',
     /** Versión (se muestra en "La liga"). Subila cuando publiques cambios. */
-    version: '2027.4.0',
+    version: '2027.4.1',
     /** Año/edición que aparece como subtítulo. */
     edition: '2027',
     /** Lema opcional debajo del nombre en el menú lateral. */
