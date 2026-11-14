@@ -229,3 +229,13 @@ html.has-welcome .dock { display: none; }
 .avatar--lg { overflow: visible; }
 .avatar--lg .avatar__img { position: absolute; inset: 0; }
 .avatar__cam { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--card); color: var(--text); border: 2px solid var(--bg); }
+
+
+/* Diseñador de navegación dentro de Administración → Creador → Diseño de la página */
+.nav-design { margin-bottom: var(--sp-3); }
+.nav-design__intro { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:var(--r-lg); background:var(--card-hover); }
+.nav-design__intro small { display:block; margin-top:4px; }
+.nav-design__field input[type="range"] { width:100%; padding:0; accent-color:var(--accent); }
+.nav-design__field input[type="color"] { width:100%; min-height:42px; padding:4px; }
+.nav-design .form-grid { gap:var(--sp-3); }
+.nav-design h4 { margin:var(--sp-2) 0 0; font-size:13px; }
