@@ -16,7 +16,7 @@ import { downloadText, esc, norm, pickFile } from '../../utils/dom.js';
 import { csvToRows, entityToCsv } from './csv.js';
 import { resizeImage } from '../../utils/image.js';
 import { ENTITIES, entityOf, formToValue, rowToForm } from './schemas.js';
-import { creatorHtml, installCreator } from './creator.js';
+import { creatorHtml, installCreator, navigationDesignerHtml, installNavigationDesigner } from './creator.js';
 import { getMods, storageLabel } from '../../services/mods/store.js';
 import { safeMode } from '../../services/mods/safe.js';
 /* ---------- contraseña local ---------- */
@@ -112,13 +112,13 @@ function openEntityForm(e, original, onSaved) {
 }
 /* ---------- módulos del panel (menú tipo "consola") ----------
    Para agregar una sección al menú: sumala acá [ícono, grupo] y en tabs (más abajo). */
-const GROUPS = ['Competición', 'Equipos', 'Contenido', 'Comunidad', 'Personalizar', 'Sistema'];
+const GROUPS = ['Competición', 'Equipos', 'Contenido', 'Comunidad', 'Personalizar', 'Diseño de la app en general', 'Sistema'];
 const MODS = {
     matches: ['ball', 'Competición'], competitions: ['trophy', 'Competición'], seasons: ['calendar', 'Competición'], zones: ['award', 'Competición'],
     teams: ['shield', 'Equipos'], players: ['users', 'Equipos'],
     news: ['newspaper', 'Contenido'], channels: ['tv', 'Contenido'], sanctions: ['shield-alert', 'Contenido'], notifications: ['bell', 'Contenido'],
     predictions: ['target', 'Comunidad'], users: ['user', 'Comunidad'],
-    editor: ['pencil', 'Personalizar'], creator: ['code', 'Personalizar'],
+    editor: ['pencil', 'Personalizar'], creator: ['code', 'Personalizar'], navigation: ['palette', 'Diseño de la app en general'],
     league: ['sliders', 'Sistema'], data: ['database', 'Sistema'],
 };
 const isWide = () => matchMedia('(min-width: 900px)').matches;
@@ -153,7 +153,7 @@ const admin = (ctx) => {
         const isAdm = st.mode !== 'cloud' || prof?.role === 'admin';
         const tabs = [
             ...ENTITIES.filter(roleOk).map((e) => [e.tab, e.plural]),
-            ...(isAdm ? [['league', 'La liga'], ['predictions', 'Pronósticos'], ['editor', 'Editor en vivo'], ['creator', 'Creador']] : []),
+            ...(isAdm ? [['league', 'La liga'], ['predictions', 'Pronósticos'], ['editor', 'Editor en vivo'], ['creator', 'Creador'], ['navigation', 'Navegación']] : []),
             ...(st.mode === 'cloud' && isAdm ? [['users', 'Usuarios y roles']] : []),
             ['data', 'Datos'],
         ];
@@ -184,6 +184,8 @@ const admin = (ctx) => {
         }
         if (tab === 'creator')
             return head + creatorHtml();
+        if (tab === 'navigation')
+            return head + navigationDesignerHtml();
         if (tab === 'editor') {
             const m = getMods();
             const nProj = Object.keys(m.projects).length;
@@ -254,6 +256,7 @@ const admin = (ctx) => {
       </div></div>`;
     }, { on: ['data', 'session', 'mods', 'mods-status'], after: () => applyFilter() });
     installCreator(ctx);
+    installNavigationDesigner(ctx);
     ctx.on('click', '[data-ed-open]', async () => { const { startEditor } = await import('../editor/index.js'); if (await startEditor()) ctx.navigate('/'); });
     const fresh = () => ctx.refresh();
     /** Filtra la lista sin volver a dibujarla (así el teclado no se cierra mientras escribís). */

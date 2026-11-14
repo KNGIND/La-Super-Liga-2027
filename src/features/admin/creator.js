@@ -26,7 +26,7 @@ const MAX_BYTES = 350 * 1024;
 let localPending = false;
 void hasLocalOnly().then((v) => { localPending = v; });
 
-/* ---------- diseñador de navegación (solo dentro de Administración → Creador) ---------- */
+/* ---------- diseñador de navegación (Administración → Diseño de la app en general) ---------- */
 const NAV_PROJECT_ID = 'diseno-navegacion-global';
 const NAV_DEFAULTS = {
     style: 'island', width: 92, height: 64, radius: 28, gap: 5, blur: 22, opacity: 82,
@@ -54,14 +54,15 @@ function navigationCss(c) {
     if (c.style === 'drawer') layout = `.dock{display:none!important}#rail.rail{display:none!important}`;
     return `${layout}.dock__item,.rail__item{color:${c.text}!important;font-size:${c.font}px!important;gap:${gap}!important;transition:all ${c.speed}ms ease!important}.dock__item__ico svg,.rail__item__ico svg{width:${c.icon}px!important;height:${c.icon}px!important}.dock__item__label,.rail__item__label{${c.labels ? '' : 'display:none!important;'}font-size:${c.font}px!important}.dock__item__ico,.rail__item__ico{${c.icons ? '' : 'display:none!important;'}}.dock__item.is-active,.rail__item.is-active{color:${c.accent}!important;${c.active ? `background:${navColor(c.accent, 20)}!important;` : 'background:transparent!important;'}${c.glow ? `filter:drop-shadow(0 0 7px ${c.accent})!important;` : ''}}.dock__item:active,.rail__item:active{transform:scale(.96)!important}@media(prefers-reduced-motion:reduce){.dock__item,.rail__item{transition:none!important}}`;
 }
-function navigationDesignerHtml() {
+export function navigationDesignerHtml() {
     const saved = getMods().projects[NAV_PROJECT_ID]?.settings?.navigationConfig ?? {};
     const c = { ...NAV_DEFAULTS, ...saved };
     const range = (key, label, min, max, unit) => `<label class="field nav-design__field"><span class="field__label">${label} <b data-nav-value="${key}">${c[key]}${unit}</b></span><input class="input" type="range" data-nav-field="${key}" min="${min}" max="${max}" value="${c[key]}"></label>`;
     const color = (key, label) => `<label class="field nav-design__field"><span class="field__label">${label}</span><input class="input" type="color" data-nav-field="${key}" value="${esc(c[key])}"></label>`;
     const check = (key, label) => `<label class="check"><input type="checkbox" data-nav-field="${key}" ${c[key] ? 'checked' : ''}><span class="check__box"></span><span>${label}</span></label>`;
-    return `<section class="card card--pad stack nav-design">
-      <div><h3>Diseño de la página</h3><p class="muted">Herramientas visuales para personalizar la interfaz general. Este apartado queda preparado para sumar más funciones de diseño.</p></div>
+    return `<section class="stack nav-design-page">
+      <div class="card card--pad stack"><h3>Diseño de la app en general</h3><p class="muted">Personalizá la apariencia global de La Súper Liga. Este espacio permitirá sumar más herramientas generales de diseño.</p></div>
+      <div class="card card--pad stack">
       <div class="nav-design__intro"><span class="adm-mod__ico">${icon('palette', 20)}</span><div class="grow"><b>Diseñador de navegación</b><small class="muted">Configurá la navegación principal y publicá el diseño para todos los usuarios.</small></div></div>
       <label class="field"><span class="field__label">Tipo de navegación</span><select class="input" data-nav-field="style">${[['island','Isla flotante'],['dock','Dock inferior'],['bar','Barra inferior completa'],['rail','Rail lateral compacto'],['sidebar','Sidebar lateral expandida'],['top','Pestañas superiores'],['drawer','Solo menú hamburguesa']].map(([v,t]) => `<option value="${v}" ${c.style === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       <div class="form-grid">${range('width','Ancho',55,100,'%')}${range('height','Alto',42,100,' px')}${range('radius','Redondez',0,44,' px')}${range('gap','Separación',0,18,' px')}${range('blur','Blur',0,40,' px')}${range('opacity','Opacidad',20,100,'%')}${range('font','Tamaño del texto',8,16,' px')}${range('icon','Tamaño de íconos',14,32,' px')}${range('speed','Velocidad de animación',0,700,' ms')}</div>
@@ -69,7 +70,7 @@ function navigationDesignerHtml() {
       <h4>Elementos y efectos</h4><div class="stack stack--sm">${check('labels','Mostrar nombres')}${check('icons','Mostrar íconos')}${check('shadow','Sombra')}${check('active','Fondo de sección activa')}${check('glow','Brillo de acento')}</div>
       <div class="row row--wrap"><button class="btn" type="button" data-nav-preview>${icon('eye',16)} Previsualizar acá</button><button class="btn" type="button" data-nav-clear>Quitar vista previa</button><button class="btn btn--primary" type="button" data-nav-save ${canSaveMods() ? '' : 'disabled'}>${icon('save',16)} Publicar para todos</button></div>
       <small class="muted">${esc(storageLabel())}. La publicación global requiere que Supabase tenga activa la migración 004_site_mods.sql.</small>
-    </section>`;
+      </div></section>`;
 }
 function readNavigationConfig(root) {
     const c = { ...NAV_DEFAULTS };
@@ -108,7 +109,6 @@ export function creatorHtml() {
     return `
     ${safeMode() ? notice('Modo seguro activo: los proyectos no se ejecutan. Podés editarlos y apagarlos; para volver a la normalidad entrá con ?safe=0.', 'warn') : ''}
     ${m.tableMissing ? notice('Falta crear la tabla en Supabase (migración 004_site_mods.sql). Mientras tanto, los proyectos se guardan solo en este dispositivo.', 'warn') : ''}
-    ${navigationDesignerHtml()}
     <div class="card card--pad stack"><h3>Creador de proyectos</h3>
       <p class="muted">Pegá código para sumar cosas nuevas a la app (diseño, funciones, secciones) sin tocar los archivos del proyecto. Se guardan en: <b>${esc(storageLabel())}</b>.</p>
       <div class="row row--wrap"><button class="btn btn--primary" data-mod-new ${canSaveMods() ? '' : 'disabled'}>${icon('plus', 18)} Nuevo proyecto</button><button class="btn" data-mod-import>${icon('upload', 18)} Importar</button>
@@ -117,7 +117,7 @@ export function creatorHtml() {
     <div class="stack mt-3">${[...FILE_MODS.map((f) => card({ ...f, enabled: true, version: 1 }, true)), ...list.map((p) => card(p, false))].join('') || '<div class="card card--pad muted">Todavía no hay proyectos. Creá el primero con “Nuevo proyecto” (podés arrancar con la plantilla de Isla dinámica).</div>'}</div>`;
 }
 
-export function installCreator(ctx) {
+export function installNavigationDesigner(ctx) {
     const get = (id) => getMods().projects[id];
     const previewId = 'lsl-admin-nav-preview';
     const clearNavPreview = () => document.getElementById(previewId)?.remove();
@@ -139,7 +139,7 @@ export function installCreator(ctx) {
         const history = prev ? [...(prev.history ?? []), { v: prev.version, at: prev.updatedAt ?? now, js: prev.js ?? '', css: prev.css ?? '', html: prev.html ?? '' }].slice(-8) : [];
         const project = {
             ...(prev ?? {}), id: NAV_PROJECT_ID, name: 'Diseño de navegación global', mount: 'global', screen: '*', position: 'end',
-            section: { title: '', icon: 'palette', nav: 'none' }, enabled: true, notes: 'Configuración publicada desde Administración → Creador → Diseño de la página.',
+            section: { title: '', icon: 'palette', nav: 'none' }, enabled: true, notes: 'Configuración publicada desde Administración → Diseño de la app en general → Diseño de navegación.',
             js: '', css: navigationCss(c), html: '', settings: { ...(prev?.settings ?? {}), navigationConfig: c },
             version: prev ? (prev.version ?? 1) + 1 : 1, createdAt: prev?.createdAt ?? now, updatedAt: now, history,
         };
@@ -152,6 +152,10 @@ export function installCreator(ctx) {
             toast(e.message || 'No se pudo publicar el diseño.', 'error', 5000);
         }
     });
+}
+
+export function installCreator(ctx) {
+    const get = (id) => getMods().projects[id];
     ctx.on('click', '[data-mod-new]', () => openStudio(null));
     ctx.on('click', '[data-mod-edit]', (el) => { const p = get(el.dataset.modEdit); if (p) openStudio(p); });
     ctx.on('click', '[data-mod-zip]', (el) => { const p = get(el.dataset.modZip); if (p) exportZip(p); });
