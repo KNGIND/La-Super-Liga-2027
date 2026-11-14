@@ -26,6 +26,66 @@ const MAX_BYTES = 350 * 1024;
 let localPending = false;
 void hasLocalOnly().then((v) => { localPending = v; });
 
+/* ---------- diseñador de navegación (solo dentro de Administración → Creador) ---------- */
+const NAV_PROJECT_ID = 'diseno-navegacion-global';
+const NAV_DEFAULTS = {
+    style: 'island', width: 92, height: 64, radius: 28, gap: 5, blur: 22, opacity: 82,
+    font: 11, icon: 22, speed: 260, bg: '#17191f', text: '#e9edf5', accent: '#3987ff', border: '#ffffff',
+    labels: true, icons: true, shadow: true, active: true, glow: false,
+};
+function navColor(hex, alpha = 100) {
+    const h = String(hex || '#ffffff').replace('#', '');
+    const n = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+    const r = parseInt(n.slice(0, 2), 16) || 0, g = parseInt(n.slice(2, 4), 16) || 0, b = parseInt(n.slice(4, 6), 16) || 0;
+    return `rgba(${r},${g},${b},${Math.max(0, Math.min(100, alpha)) / 100})`;
+}
+function navigationCss(c) {
+    const bg = navColor(c.bg, c.opacity);
+    const border = navColor(c.border, 35);
+    const shadow = c.shadow ? '0 12px 36px rgba(0,0,0,.25)' : 'none';
+    const radius = `${c.radius}px`, gap = `${c.gap}px`, blur = `blur(${c.blur}px)`;
+    let layout = '';
+    if (c.style === 'island') layout = `.dock{left:50%!important;right:auto!important;bottom:calc(env(safe-area-inset-bottom) + 10px)!important;transform:translateX(-50%)!important;width:min(${c.width}%,560px)!important;background:transparent!important;border:0!important;padding:0!important}.dock__inner{width:100%!important;max-width:none!important;height:${c.height}px!important;border-radius:${radius}!important;gap:${gap}!important;padding:5px!important;background:${bg}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important;border:1px solid ${border}!important;box-shadow:${shadow}!important}`;
+    if (c.style === 'dock') layout = `.dock__inner{height:${c.height}px!important;border-radius:${radius}!important;gap:${gap}!important;background:${bg}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important;border:1px solid ${border}!important;box-shadow:${shadow}!important}`;
+    if (c.style === 'bar') layout = `.dock{background:${bg}!important;border-top:1px solid ${border}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important}.dock__inner{width:100%!important;max-width:none!important;height:${c.height}px!important;border-radius:0!important;gap:${gap}!important}`;
+    if (c.style === 'rail') layout = `.dock{display:none!important}#rail.rail{display:flex!important;position:fixed!important;z-index:60!important;left:10px!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:76px!important;height:auto!important;max-height:75vh!important;overflow:auto!important;flex-direction:column!important;align-items:stretch!important;padding:8px!important;gap:${gap}!important;border:1px solid ${border}!important;border-radius:${radius}!important;background:${bg}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important;box-shadow:${shadow}!important}.rail__item{flex-direction:column!important;justify-content:center!important;text-align:center!important}`;
+    if (c.style === 'sidebar') layout = `.dock{display:none!important}#rail.rail{display:flex!important;position:fixed!important;z-index:60!important;left:10px!important;top:80px!important;bottom:12px!important;width:190px!important;height:auto!important;overflow:auto!important;flex-direction:column!important;align-items:stretch!important;padding:10px!important;gap:${gap}!important;border:1px solid ${border}!important;border-radius:${radius}!important;background:${bg}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important;box-shadow:${shadow}!important}.rail__item{flex-direction:row!important;justify-content:flex-start!important;text-align:left!important}`;
+    if (c.style === 'top') layout = `.dock{top:calc(env(safe-area-inset-top) + 66px)!important;bottom:auto!important;left:12px!important;right:12px!important;background:transparent!important;border:0!important;padding:0!important}.dock__inner{width:100%!important;max-width:none!important;height:${c.height}px!important;border-radius:${radius}!important;background:${bg}!important;backdrop-filter:${blur}!important;-webkit-backdrop-filter:${blur}!important;box-shadow:${shadow}!important;gap:${gap}!important}`;
+    if (c.style === 'drawer') layout = `.dock{display:none!important}#rail.rail{display:none!important}`;
+    return `${layout}.dock__item,.rail__item{color:${c.text}!important;font-size:${c.font}px!important;gap:${gap}!important;transition:all ${c.speed}ms ease!important}.dock__item__ico svg,.rail__item__ico svg{width:${c.icon}px!important;height:${c.icon}px!important}.dock__item__label,.rail__item__label{${c.labels ? '' : 'display:none!important;'}font-size:${c.font}px!important}.dock__item__ico,.rail__item__ico{${c.icons ? '' : 'display:none!important;'}}.dock__item.is-active,.rail__item.is-active{color:${c.accent}!important;${c.active ? `background:${navColor(c.accent, 20)}!important;` : 'background:transparent!important;'}${c.glow ? `filter:drop-shadow(0 0 7px ${c.accent})!important;` : ''}}.dock__item:active,.rail__item:active{transform:scale(.96)!important}@media(prefers-reduced-motion:reduce){.dock__item,.rail__item{transition:none!important}}`;
+}
+function navigationDesignerHtml() {
+    const saved = getMods().projects[NAV_PROJECT_ID]?.settings?.navigationConfig ?? {};
+    const c = { ...NAV_DEFAULTS, ...saved };
+    const range = (key, label, min, max, unit) => `<label class="field nav-design__field"><span class="field__label">${label} <b data-nav-value="${key}">${c[key]}${unit}</b></span><input class="input" type="range" data-nav-field="${key}" min="${min}" max="${max}" value="${c[key]}"></label>`;
+    const color = (key, label) => `<label class="field nav-design__field"><span class="field__label">${label}</span><input class="input" type="color" data-nav-field="${key}" value="${esc(c[key])}"></label>`;
+    const check = (key, label) => `<label class="check"><input type="checkbox" data-nav-field="${key}" ${c[key] ? 'checked' : ''}><span class="check__box"></span><span>${label}</span></label>`;
+    return `<section class="card card--pad stack nav-design">
+      <div><h3>Diseño de la página</h3><p class="muted">Herramientas visuales para personalizar la interfaz general. Este apartado queda preparado para sumar más funciones de diseño.</p></div>
+      <div class="nav-design__intro"><span class="adm-mod__ico">${icon('palette', 20)}</span><div class="grow"><b>Diseñador de navegación</b><small class="muted">Configurá la navegación principal y publicá el diseño para todos los usuarios.</small></div></div>
+      <label class="field"><span class="field__label">Tipo de navegación</span><select class="input" data-nav-field="style">${[['island','Isla flotante'],['dock','Dock inferior'],['bar','Barra inferior completa'],['rail','Rail lateral compacto'],['sidebar','Sidebar lateral expandida'],['top','Pestañas superiores'],['drawer','Solo menú hamburguesa']].map(([v,t]) => `<option value="${v}" ${c.style === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <div class="form-grid">${range('width','Ancho',55,100,'%')}${range('height','Alto',42,100,' px')}${range('radius','Redondez',0,44,' px')}${range('gap','Separación',0,18,' px')}${range('blur','Blur',0,40,' px')}${range('opacity','Opacidad',20,100,'%')}${range('font','Tamaño del texto',8,16,' px')}${range('icon','Tamaño de íconos',14,32,' px')}${range('speed','Velocidad de animación',0,700,' ms')}</div>
+      <h4>Colores</h4><div class="form-grid">${color('bg','Fondo')}${color('text','Texto')}${color('accent','Elemento activo')}${color('border','Borde')}</div>
+      <h4>Elementos y efectos</h4><div class="stack stack--sm">${check('labels','Mostrar nombres')}${check('icons','Mostrar íconos')}${check('shadow','Sombra')}${check('active','Fondo de sección activa')}${check('glow','Brillo de acento')}</div>
+      <div class="row row--wrap"><button class="btn" type="button" data-nav-preview>${icon('eye',16)} Previsualizar acá</button><button class="btn" type="button" data-nav-clear>Quitar vista previa</button><button class="btn btn--primary" type="button" data-nav-save ${canSaveMods() ? '' : 'disabled'}>${icon('save',16)} Publicar para todos</button></div>
+      <small class="muted">${esc(storageLabel())}. La publicación global requiere que Supabase tenga activa la migración 004_site_mods.sql.</small>
+    </section>`;
+}
+function readNavigationConfig(root) {
+    const c = { ...NAV_DEFAULTS };
+    root.querySelectorAll('[data-nav-field]').forEach((el) => {
+        const key = el.dataset.navField;
+        c[key] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? Number(el.value) : el.value;
+    });
+    return c;
+}
+function updateNavigationValues(root) {
+    root.querySelectorAll('[data-nav-value]').forEach((el) => {
+        const input = root.querySelector(`[data-nav-field="${el.dataset.navValue}"]`);
+        if (input) el.textContent = input.value + (input.dataset.navField === 'width' || input.dataset.navField === 'opacity' ? '%' : input.dataset.navField === 'speed' ? ' ms' : ' px');
+    });
+}
+
 /* ---------- lista ---------- */
 export function creatorHtml() {
     const m = getMods();
@@ -48,6 +108,7 @@ export function creatorHtml() {
     return `
     ${safeMode() ? notice('Modo seguro activo: los proyectos no se ejecutan. Podés editarlos y apagarlos; para volver a la normalidad entrá con ?safe=0.', 'warn') : ''}
     ${m.tableMissing ? notice('Falta crear la tabla en Supabase (migración 004_site_mods.sql). Mientras tanto, los proyectos se guardan solo en este dispositivo.', 'warn') : ''}
+    ${navigationDesignerHtml()}
     <div class="card card--pad stack"><h3>Creador de proyectos</h3>
       <p class="muted">Pegá código para sumar cosas nuevas a la app (diseño, funciones, secciones) sin tocar los archivos del proyecto. Se guardan en: <b>${esc(storageLabel())}</b>.</p>
       <div class="row row--wrap"><button class="btn btn--primary" data-mod-new ${canSaveMods() ? '' : 'disabled'}>${icon('plus', 18)} Nuevo proyecto</button><button class="btn" data-mod-import>${icon('upload', 18)} Importar</button>
@@ -58,6 +119,39 @@ export function creatorHtml() {
 
 export function installCreator(ctx) {
     const get = (id) => getMods().projects[id];
+    const previewId = 'lsl-admin-nav-preview';
+    const clearNavPreview = () => document.getElementById(previewId)?.remove();
+    ctx.on('input', '[data-nav-field]', () => updateNavigationValues(ctx.el));
+    ctx.on('change', '[data-nav-field]', () => updateNavigationValues(ctx.el));
+    ctx.on('click', '[data-nav-preview]', () => {
+        const c = readNavigationConfig(ctx.el);
+        let style = document.getElementById(previewId);
+        if (!style) { style = document.createElement('style'); style.id = previewId; document.head.appendChild(style); }
+        style.textContent = navigationCss(c);
+        toast('Vista previa aplicada solo en este dispositivo.', 'info');
+    });
+    ctx.on('click', '[data-nav-clear]', () => { clearNavPreview(); toast('Vista previa quitada.', 'info'); });
+    ctx.on('click', '[data-nav-save]', async () => {
+        if (!canSaveMods()) return toast('Tu cuenta no tiene permiso para publicar diseños.', 'error');
+        const c = readNavigationConfig(ctx.el);
+        const prev = get(NAV_PROJECT_ID);
+        const now = new Date().toISOString();
+        const history = prev ? [...(prev.history ?? []), { v: prev.version, at: prev.updatedAt ?? now, js: prev.js ?? '', css: prev.css ?? '', html: prev.html ?? '' }].slice(-8) : [];
+        const project = {
+            ...(prev ?? {}), id: NAV_PROJECT_ID, name: 'Diseño de navegación global', mount: 'global', screen: '*', position: 'end',
+            section: { title: '', icon: 'palette', nav: 'none' }, enabled: true, notes: 'Configuración publicada desde Administración → Creador → Diseño de la página.',
+            js: '', css: navigationCss(c), html: '', settings: { ...(prev?.settings ?? {}), navigationConfig: c },
+            version: prev ? (prev.version ?? 1) + 1 : 1, createdAt: prev?.createdAt ?? now, updatedAt: now, history,
+        };
+        try {
+            await saveProject(project);
+            clearNavPreview();
+            await syncProjects(getMods().projects);
+            toast(getMods().source === 'cloud' ? 'Diseño publicado para todos los usuarios.' : 'Diseño guardado en este dispositivo. Falta conectar la nube para compartirlo.', 'success', 5000);
+        } catch (e) {
+            toast(e.message || 'No se pudo publicar el diseño.', 'error', 5000);
+        }
+    });
     ctx.on('click', '[data-mod-new]', () => openStudio(null));
     ctx.on('click', '[data-mod-edit]', (el) => { const p = get(el.dataset.modEdit); if (p) openStudio(p); });
     ctx.on('click', '[data-mod-zip]', (el) => { const p = get(el.dataset.modZip); if (p) exportZip(p); });
